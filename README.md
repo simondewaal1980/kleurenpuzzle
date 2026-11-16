@@ -27,15 +27,18 @@ fotosegmentatie tot Compose-UI, Canvas-rendering en opslag.
   - rustige reveal-animatie bij voltooiing en delen als PNG.
 - **Eigen foto's**: Photo Picker → voorbeeld → moeilijkheidsgraad kiezen (vijf
   niveaus) → genereren op het toestel → de plaat verschijnt onder "Mijn foto's".
-  Geen upload, geen toestemmingen.
+  Bestaande eigen foto's kun je via het kaartmenu opnieuw maken met een ander
+  niveau; de bronfoto blijft daarvoor lokaal bewaard. Geen upload, geen
+  toestemmingen.
 - **Bibliotheek** met drie tabbladen: Landschappen, Verder gaan en Mijn foto's.
   Voortgang en voltooiing zijn direct zichtbaar.
 - **Instellingen**: nummers aan/uit, hint-modus, kleurblind-modus, haptics,
   magisch vullen, standaardmoeilijkheidsgraad (vijf niveaus),
   licht/donker/systeemthema en gegevens wissen.
-- **Tests**: unit tests voor het bestandsformaat, de pijplijn en de vijf
-  moeilijkheidsniveaus, een content-QA-test over alle meegeleverde platen, en
-  instrumented Compose-tests (o.a. pinch-zoom).
+- **Tests**: unit tests voor het bestandsformaat, de pijplijn, de vijf
+  moeilijkheidsniveaus en de compatibiliteit van de foto-index, een
+  content-QA-test over alle meegeleverde platen, en instrumented Compose-tests
+  (o.a. pinch-zoom).
 - **Offline generator-CLI** die exact dezelfde pijplijn gebruikt als de app.
 
 ### Status ten opzichte van `plan.md`
@@ -186,7 +189,10 @@ pogingen om de wachttijd kort te houden.
 
 Voortgang is per plaat een klein binair bestandje (`files/progress/<id>.bin`) met
 alleen de gevulde regio-ids. Eigen foto's staan in `files/myplates/` met een
-`index.json`. Instellingen staan in `SharedPreferences`.
+`index.json`, de `.kplate`, een bibliotheekpreview en de bronfoto
+(`<id>-source.jpg`, max. 1600 px). Die bronfoto wordt gebruikt als je de
+moeilijkheid van een bestaande foto later aanpast. Instellingen staan in
+`SharedPreferences`.
 
 Het plan noemde Room en DataStore. Voor deze hoeveelheid data is dat overkill:
 het zou code-generatie (KSP) en extra afhankelijkheden toevoegen zonder voordeel.
@@ -227,7 +233,11 @@ Elk niveau vertaalt zich naar `ConvertOptions`:
 
 "Normaal" is exact gelijk aan `ConvertOptions()` en dus aan de vaste moeilijkheid
 van de meegeleverde landschappen. De instellingen kiezen de standaard voor nieuwe
-eigen foto's; op het fotoscherm kan de gebruiker per foto afwijken.
+eigen foto's; op het fotoscherm kan de gebruiker per foto afwijken. Bij een
+bestaande eigen foto opent "Moeilijkheid aanpassen" in het kaartmenu dezelfde
+vijf keuzes; de plaat wordt dan opnieuw gegenereerd en de oude voortgang wordt
+gewist. Foto's van vóór deze functie hebben nog geen opgeslagen bronfoto; voor
+hen gebruikt de app de bibliotheekpreview als bron.
 
 De onderliggende parameters in `pipeline/src/main/kotlin/nl/kleuren/pipeline/ConvertOptions.kt`:
 

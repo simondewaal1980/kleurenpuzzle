@@ -19,14 +19,11 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nl.kleuren.app.data.AppContainer
-import nl.kleuren.app.data.PlateRepository
 import nl.kleuren.app.data.SettingsRepository
-import nl.kleuren.app.data.UserPlateStore
+import nl.kleuren.app.data.UserPlateGenerator
+import nl.kleuren.app.ui.components.stageLabel
 import nl.kleuren.pipeline.ConversionCancelledException
-import nl.kleuren.pipeline.ConversionStage
 import nl.kleuren.pipeline.Difficulty
-import nl.kleuren.pipeline.PhotoToPlate
-import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -59,8 +56,7 @@ data class PhotoImportUiState(
  */
 class PhotoImportViewModel(
     private val context: Context,
-    private val userPlateStore: UserPlateStore,
-    private val plateRepository: PlateRepository,
+    private val userPlateGenerator: UserPlateGenerator,
     settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
@@ -142,43 +138,20 @@ class PhotoImportViewModel(
             }
 
             try {
-                val width = bitmap.width
-                val height = bitmap.height
-                val pixels = IntArray(width * height)
-                withContext(Dispatchers.Default) {
-                    bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
-                }
-
-                val plate = withContext(Dispatchers.Default) {
-                    PhotoToPlate.convert(
-                        width = width,
-                        height = height,
-                        argb = pixels,
-                        options = current.difficulty.toConvertOptions(
-                            maxSide = 1200,
-                            maxColorAttempts = 2,
-                            randomSeed = System.currentTimeMillis(),
-                        ),
-                    ) { progress ->
-                        _state.update {
-                            it.copy(
-                                generating = true,
-                                progress = progress.fraction,
-                                stage = stageLabel(progress.stage),
-                            )
-                        }
-                        !cancelRequested && job.isActive
+                val entry = userPlateGenerator.create(
+                    bitmap = bitmap,
+                    title = current.title,
+                    difficulty = current.difficulty,
+                ) { progress ->
+                    _state.update {
+                        it.copy(
+                            generating = true,
+                            progress = progress.fraction,
+                            stage = progress.stage.stageLabel(),
+                        )
                     }
+                    !cancelRequested && job.isActive
                 }
-
-                val preview = withContext(Dispatchers.IO) { encodePreview(bitmap) }
-                val entry = userPlateStore.save(
-                    plate = plate.withPreviewJpeg(preview),
-                    title = _state.value.title,
-                    previewJpeg = preview,
-                )
-                plateRepository.invalidatePreview(entry.id)
-                plateRepository.refresh()
 
                 _state.update {
                     it.copy(
@@ -264,35 +237,12 @@ class PhotoImportViewModel(
         }
     }
 
-    private fun encodePreview(bitmap: Bitmap): ByteArray {
-        val scale = min(1f, 560f / max(bitmap.width, bitmap.height))
-        val width = (bitmap.width * scale).roundToInt().coerceAtLeast(1)
-        val height = (bitmap.height * scale).roundToInt().coerceAtLeast(1)
-        val preview = Bitmap.createScaledBitmap(bitmap, width, height, true)
-        return ByteArrayOutputStream(128 * 1024).use { output ->
-            preview.compress(Bitmap.CompressFormat.JPEG, 86, output)
-            if (preview !== bitmap) preview.recycle()
-            output.toByteArray()
-        }
-    }
-
-    private fun stageLabel(stage: ConversionStage): String = when (stage) {
-        ConversionStage.PREPARING -> "Foto voorbereiden…"
-        ConversionStage.SMOOTHING -> "Ruis dempen…"
-        ConversionStage.QUANTIZING -> "Kleuren kiezen…"
-        ConversionStage.SEGMENTING -> "Vlakken zoeken…"
-        ConversionStage.TRACING -> "Contouren tekenen…"
-        ConversionStage.BUILDING -> "Plaat opbouwen…"
-        ConversionStage.DONE -> "Klaar"
-    }
-
     companion object {
         fun factory(container: AppContainer) = viewModelFactory {
             initializer {
                 PhotoImportViewModel(
                     context = container.appContext,
-                    userPlateStore = container.userPlateStore,
-                    plateRepository = container.plateRepository,
+                    userPlateGenerator = container.userPlateGenerator,
                     settingsRepository = container.settingsRepository,
                 )
             }

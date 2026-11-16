@@ -1,5 +1,6 @@
 package nl.kleuren.app.data
 
+import nl.kleuren.pipeline.Difficulty
 import java.io.File
 
 /**
@@ -33,6 +34,8 @@ data class PlateSummary(
     val sourceUrl: String = "",
     val isUserPlate: Boolean = false,
     val createdAt: Long = 0L,
+    /** Alleen bij eigen foto's: de moeilijkheid waarmee de plaat is gemaakt. */
+    val difficulty: Difficulty? = null,
 )
 
 /** Een pack is een groep landschappen, bijvoorbeeld "Alpen & Meren". */

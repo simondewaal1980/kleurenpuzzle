@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,8 +26,10 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
@@ -46,12 +49,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -72,13 +78,16 @@ import nl.kleuren.app.R
 import nl.kleuren.app.data.AppContainer
 import nl.kleuren.app.data.PlateRepository
 import nl.kleuren.app.data.PlateSummary
+import nl.kleuren.app.ui.components.DifficultyPicker
+import nl.kleuren.pipeline.Difficulty
+import kotlin.math.roundToInt
 
 /**
  * Het startscherm: een rustige bibliotheek met drie tabbladen.
  *
  * De UI is bewust een "domme" laag: hij toont [LibraryUiState] en stuurt
  * gebruikersacties door naar de ViewModel. Alle logica (voortgang, sorteren,
- * verwijderen) zit in de ViewModel en repositories.
+ * verwijderen, opnieuw genereren) zit in de ViewModel en repositories.
  */
 @Composable
 fun LibraryScreen(
@@ -89,12 +98,22 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = viewModel(factory = LibraryViewModel.factory(container)),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val settings by container.settingsRepository.settings.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.message) {
+        state.message?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearMessage()
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         // De header regelt zelf de statusbalk. Zo voorkomen we dubbele
         // systeem-insets en houdt de grid genoeg ruimte onderaan voor de FAB.
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             LibraryHeader(
                 selectedTab = state.tab,
@@ -140,13 +159,38 @@ fun LibraryScreen(
                     LibraryTab.MY_PHOTOS -> MyPhotosTab(
                         items = state.myPhotos,
                         plateRepository = container.plateRepository,
+                        defaultDifficulty = settings.difficulty,
                         onOpenPlate = onOpenPlate,
                         onAddPhoto = onAddPhoto,
                         onDelete = viewModel::deleteUserPlate,
+                        onRegenerate = viewModel::regenerateUserPlate,
                     )
                 }
             }
         }
+    }
+
+    if (state.regeneratingPlateId != null) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("Foto opnieuw maken") },
+            text = {
+                Column {
+                    LinearProgressIndicator(
+                        progress = { state.regenerationProgress.coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        text = "${state.regenerationStage} " +
+                            "${(state.regenerationProgress * 100).roundToInt()}%",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            },
+            confirmButton = {},
+        )
     }
 }
 
@@ -350,9 +394,11 @@ private fun ContinueTab(
 private fun MyPhotosTab(
     items: List<PlateItem>,
     plateRepository: PlateRepository,
+    defaultDifficulty: Difficulty,
     onOpenPlate: (String) -> Unit,
     onAddPhoto: () -> Unit,
     onDelete: (String) -> Unit,
+    onRegenerate: (String, Difficulty) -> Unit,
 ) {
     if (items.isEmpty()) {
         EmptyState(
@@ -382,7 +428,8 @@ private fun MyPhotosTab(
                     style = MaterialTheme.typography.headlineSmall,
                 )
                 Text(
-                    text = "Lokaal op dit toestel. Je kunt ze altijd verwijderen.",
+                    text = "Lokaal op dit toestel. Via het menu op een kaart pas je de " +
+                        "moeilijkheid aan of verwijder je de foto.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -392,8 +439,10 @@ private fun MyPhotosTab(
             PlateCard(
                 item = item,
                 plateRepository = plateRepository,
+                defaultDifficulty = defaultDifficulty,
                 onClick = { onOpenPlate(item.summary.id) },
                 onDelete = { onDelete(item.summary.id) },
+                onRegenerate = { difficulty -> onRegenerate(item.summary.id, difficulty) },
             )
         }
     }
@@ -407,11 +456,17 @@ private fun MyPhotosTab(
 private fun PlateCard(
     item: PlateItem,
     plateRepository: PlateRepository,
+    defaultDifficulty: Difficulty = Difficulty.DEFAULT,
     onClick: () -> Unit,
     onDelete: (() -> Unit)? = null,
+    onRegenerate: ((Difficulty) -> Unit)? = null,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var showDifficultyDialog by remember { mutableStateOf(false) }
+    var chosenDifficulty by remember(item.summary.id) {
+        mutableStateOf(item.summary.difficulty ?: defaultDifficulty)
+    }
 
     Card(
         onClick = onClick,
@@ -465,6 +520,16 @@ private fun PlateCard(
                         }
                     }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        if (onRegenerate != null) {
+                            DropdownMenuItem(
+                                text = { Text("Moeilijkheid aanpassen") },
+                                onClick = {
+                                    menuOpen = false
+                                    chosenDifficulty = item.summary.difficulty ?: defaultDifficulty
+                                    showDifficultyDialog = true
+                                },
+                            )
+                        }
                         DropdownMenuItem(
                             text = { Text("Verwijderen") },
                             leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
@@ -514,6 +579,43 @@ private fun PlateCard(
             },
             dismissButton = {
                 TextButton(onClick = { confirmDelete = false }) { Text("Annuleren") }
+            },
+        )
+    }
+
+    if (showDifficultyDialog && onRegenerate != null) {
+        AlertDialog(
+            onDismissRequest = { showDifficultyDialog = false },
+            title = { Text("Moeilijkheid aanpassen") },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 460.dp)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    Text(
+                        text = "De foto wordt opnieuw gemaakt met de gekozen " +
+                            "moeilijkheid. Je voortgang van deze foto wordt gewist.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    DifficultyPicker(
+                        selected = chosenDifficulty,
+                        onSelect = { chosenDifficulty = it },
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDifficultyDialog = false
+                        onRegenerate(chosenDifficulty)
+                    },
+                ) { Text("Opnieuw maken") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDifficultyDialog = false }) { Text("Annuleren") }
             },
         )
     }

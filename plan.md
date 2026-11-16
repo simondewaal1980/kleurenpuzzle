@@ -40,7 +40,7 @@ Voor **eigen foto's** kiest de gebruiker een moeilijkheidsgraad uit vijf niveaus
 | Moeilijk | 17 | 450–800 | 0,03% |
 | Zeer moeilijk | 20 | 600–800 | 0,02% |
 
-De instellingen kiezen de standaard voor nieuwe foto's; op het fotoscherm kan de gebruiker per foto afwijken. De niveaus staan in `pipeline/…/Difficulty.kt` en vertalen zich naar `ConvertOptions`, zodat app en generator dezelfde code blijven gebruiken.
+De instellingen kiezen de standaard voor nieuwe foto's; op het fotoscherm kan de gebruiker per foto afwijken. Bestaande eigen foto's kunnen via het kaartmenu opnieuw worden gemaakt met een ander niveau; daarvoor bewaart de app de bronfoto lokaal. De niveaus staan in `pipeline/…/Difficulty.kt` en vertalen zich naar `ConvertOptions`, zodat app en generator dezelfde code blijven gebruiken.
 
 ### 3.2 Bestandsformaat per kleurplaat
 Compact binair formaat (of protobuf), per plaat ~200–500 KB:
@@ -83,7 +83,7 @@ tools/
 ```
 
 **Schermen:**
-1. **Home / Bibliotheek**: tabs — *Landschappen* (gebundelde packs per regio, bijv. "Alpen", "Middellandse Zee", "Noord-Europa"), *Verder gaan* (WIP's), *Mijn foto's*. Kaartweergave met thumbnail, voortgangspercentage.
+1. **Home / Bibliotheek**: tabs — *Landschappen* (gebundelde packs per regio, bijv. "Alpen", "Middellandse Zee", "Noord-Europa"), *Verder gaan* (WIP's), *Mijn foto's*. Kaartweergave met thumbnail, voortgangspercentage. Eigen foto's hebben een kaartmenu om de moeilijkheid opnieuw in te stellen of de foto te verwijderen.
 2. **Kleurbord** (hart van de app):
    - Pinch-zoom & pan (matrix-transformatie; bij diepe zoom tiled渲染 van de bitmap-laag).
    - Onderin: paletbalk met kleur + nummer; geselecteerde kleur accentueert bijbehorende regio's subtiel (optionele "hint"-modus).

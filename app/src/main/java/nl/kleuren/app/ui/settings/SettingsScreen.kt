@@ -154,6 +154,7 @@ fun SettingsScreen(
             SettingsSection(title = "Moeilijkheidsgraad") {
                 Text(
                     text = "Standaard voor nieuwe kleurplaten van je eigen foto's. " +
+                        "Bestaande eigen foto's pas je aan via het menu op de kaart. " +
                         "De meegeleverde landschappen houden hun vaste moeilijkheid.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

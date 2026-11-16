@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import nl.kleuren.format.Plate
 import nl.kleuren.format.PlateCodec
+import nl.kleuren.pipeline.Difficulty
 import java.io.File
 
 /** Status van de bibliotheek: nog laden, gelukt, of een leesbare fout. */
@@ -85,10 +86,16 @@ class PlateRepository(
                     title = "Mijn foto's",
                     description = "Door jou gemaakt, lokaal op dit toestel.",
                     plates = userEntries.map { entry ->
+                        val difficulty = entry.difficulty
+                            .takeIf { it.isNotBlank() }
+                            ?.let(Difficulty::fromStorage)
                         PlateSummary(
                             id = entry.id,
                             title = entry.title,
-                            subtitle = "Eigen foto · ${entry.paletteSize} kleuren",
+                            subtitle = buildString {
+                                append("Eigen foto · ${entry.paletteSize} kleuren")
+                                if (difficulty != null) append(" · ${difficulty.label}")
+                            },
                             packId = USER_PACK_ID,
                             packTitle = "Mijn foto's",
                             plateSource = ContentSource.LocalFile(File(userPlatesDir, entry.plateFile)),
@@ -98,6 +105,7 @@ class PlateRepository(
                             credit = "Eigen foto",
                             isUserPlate = true,
                             createdAt = entry.createdAt,
+                            difficulty = difficulty,
                         )
                     },
                 )
@@ -166,6 +174,11 @@ class PlateRepository(
     /** Verwijdert de preview uit de cache, bijvoorbeeld na een wijziging. */
     fun invalidatePreview(plateId: String) {
         previewCache.remove(plateId)
+    }
+
+    /** Verwijdert de gedecodeerde plaat uit de cache na opnieuw genereren. */
+    fun invalidatePlate(plateId: String) {
+        plateCache.remove(plateId)
     }
 
     private fun readManifest(): ManifestRoot {

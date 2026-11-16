@@ -57,4 +57,12 @@ data class UserPlateEntry(
     val regionCount: Int,
     val paletteSize: Int,
     val createdAt: Long,
+    /**
+     * De bronfoto op max. 1600 px, zodat de gebruiker later een andere
+     * moeilijkheid kan kiezen. Leeg bij foto's van vóór deze functie; dan
+     * gebruiken we de preview als bron.
+     */
+    val sourceFile: String = "",
+    /** Naam van het gebruikte [nl.kleuren.pipeline.Difficulty]-niveau. */
+    val difficulty: String = "",
 )
