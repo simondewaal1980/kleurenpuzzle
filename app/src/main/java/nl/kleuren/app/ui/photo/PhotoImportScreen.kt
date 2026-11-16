@@ -36,8 +36,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,14 +56,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import nl.kleuren.app.R
 import nl.kleuren.app.data.AppContainer
+import nl.kleuren.app.ui.components.DifficultyPicker
 import kotlin.math.roundToInt
 
 /**
  * Scherm om een eigen foto toe te voegen.
  *
- * De flow is bewust kort: foto kiezen -> eventueel titel/kleuraantal aanpassen
- * -> genereren met voortgang -> direct het bord in. Dankzij de Photo Picker
- * zijn er geen opslag- of cameratoestemmingen nodig.
+ * De flow is bewust kort: foto kiezen -> eventueel titel/moeilijkheidsgraad
+ * aanpassen -> genereren met voortgang -> direct het bord in. Dankzij de Photo
+ * Picker zijn er geen opslag- of cameratoestemmingen nodig.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -201,27 +200,19 @@ fun PhotoImportScreen(
 
                 Spacer(Modifier.height(18.dp))
                 Text(
-                    text = "Aantal kleuren: ${state.colorCount}",
+                    text = "Moeilijkheidsgraad",
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
-                    text = "Meer kleuren geven meer detail en iets meer werk. " +
-                        "De standaardwaarde houdt de moeilijkheid gelijk aan de landschappen.",
+                    text = "De beginwaarde komt uit de instellingen. Meer kleuren en kleinere " +
+                        "vlakken geven meer detail en meer werk.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Slider(
-                    value = state.colorCount.toFloat(),
-                    onValueChange = { viewModel.setColorCount(it.roundToInt()) },
-                    valueRange = PhotoImportViewModel.MIN_COLORS.toFloat()..
-                        PhotoImportViewModel.MAX_COLORS.toFloat(),
-                    steps = PhotoImportViewModel.MAX_COLORS - PhotoImportViewModel.MIN_COLORS - 1,
-                    colors = SliderDefaults.colors(
-                        thumbColor = MaterialTheme.colorScheme.primary,
-                        activeTrackColor = MaterialTheme.colorScheme.primary,
-                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
+                Spacer(Modifier.height(4.dp))
+                DifficultyPicker(
+                    selected = state.difficulty,
+                    onSelect = viewModel::setDifficulty,
                 )
 
                 Spacer(Modifier.height(8.dp))

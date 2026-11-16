@@ -51,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import nl.kleuren.app.data.AppContainer
 import nl.kleuren.app.data.ThemeMode
+import nl.kleuren.app.ui.components.DifficultyPicker
 
 private enum class ConfirmAction { PROGRESS, PHOTOS, EVERYTHING }
 
@@ -146,6 +147,23 @@ fun SettingsScreen(
                     checked = state.settings.colorBlindMode,
                     onCheckedChange = viewModel::setColorBlind,
                 )
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            SettingsSection(title = "Moeilijkheidsgraad") {
+                Text(
+                    text = "Standaard voor nieuwe kleurplaten van je eigen foto's. " +
+                        "De meegeleverde landschappen houden hun vaste moeilijkheid.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                )
+                DifficultyPicker(
+                    selected = state.settings.difficulty,
+                    onSelect = viewModel::setDifficulty,
+                )
+                Spacer(Modifier.height(4.dp))
             }
 
             Spacer(Modifier.height(20.dp))

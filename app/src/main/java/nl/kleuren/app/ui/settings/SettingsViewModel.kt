@@ -18,6 +18,7 @@ import nl.kleuren.app.data.ProgressRepository
 import nl.kleuren.app.data.SettingsRepository
 import nl.kleuren.app.data.ThemeMode
 import nl.kleuren.app.data.UserPlateStore
+import nl.kleuren.pipeline.Difficulty
 
 data class SettingsUiState(
     val settings: AppSettings = AppSettings(),
@@ -63,6 +64,7 @@ class SettingsViewModel(
     fun setHaptics(value: Boolean) = settingsRepository.setHapticsEnabled(value)
     fun setMagic(value: Boolean) = settingsRepository.setMagicFillEnabled(value)
     fun setColorBlind(value: Boolean) = settingsRepository.setColorBlindMode(value)
+    fun setDifficulty(difficulty: Difficulty) = settingsRepository.setDifficulty(difficulty)
 
     fun clearProgress() {
         viewModelScope.launch {

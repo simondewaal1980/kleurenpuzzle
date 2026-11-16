@@ -20,10 +20,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nl.kleuren.app.data.AppContainer
 import nl.kleuren.app.data.PlateRepository
+import nl.kleuren.app.data.SettingsRepository
 import nl.kleuren.app.data.UserPlateStore
 import nl.kleuren.pipeline.ConversionCancelledException
 import nl.kleuren.pipeline.ConversionStage
-import nl.kleuren.pipeline.ConvertOptions
+import nl.kleuren.pipeline.Difficulty
 import nl.kleuren.pipeline.PhotoToPlate
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
@@ -38,7 +39,7 @@ data class PhotoImportUiState(
     val bitmap: Bitmap? = null,
     val loadingImage: Boolean = false,
     val title: String = "Mijn foto",
-    val colorCount: Int = 14,
+    val difficulty: Difficulty = Difficulty.DEFAULT,
     val generating: Boolean = false,
     val progress: Float = 0f,
     val stage: String = "",
@@ -60,9 +61,14 @@ class PhotoImportViewModel(
     private val context: Context,
     private val userPlateStore: UserPlateStore,
     private val plateRepository: PlateRepository,
+    settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(PhotoImportUiState())
+    private val _state = MutableStateFlow(
+        // De instellingen bepalen de beginwaarde; per foto mag de gebruiker
+        // daarvan afwijken zonder de standaard te veranderen.
+        PhotoImportUiState(difficulty = settingsRepository.settings.value.difficulty),
+    )
     val state: StateFlow<PhotoImportUiState> = _state.asStateFlow()
 
     @Volatile
@@ -113,8 +119,8 @@ class PhotoImportViewModel(
         _state.update { it.copy(title = title) }
     }
 
-    fun setColorCount(count: Int) {
-        _state.update { it.copy(colorCount = count.coerceIn(MIN_COLORS, MAX_COLORS)) }
+    fun setDifficulty(difficulty: Difficulty) {
+        _state.update { it.copy(difficulty = difficulty) }
     }
 
     fun generate() {
@@ -148,11 +154,8 @@ class PhotoImportViewModel(
                         width = width,
                         height = height,
                         argb = pixels,
-                        options = ConvertOptions(
+                        options = current.difficulty.toConvertOptions(
                             maxSide = 1200,
-                            colorCount = current.colorCount,
-                            targetMinRegions = 300,
-                            targetMaxRegions = 800,
                             maxColorAttempts = 2,
                             randomSeed = System.currentTimeMillis(),
                         ),
@@ -209,7 +212,7 @@ class PhotoImportViewModel(
     /** Verwijdert het gekozen beeld uit het geheugen (bijv. bij "andere foto"). */
     fun clearImage() {
         _state.update {
-            PhotoImportUiState(title = "Mijn foto", colorCount = it.colorCount)
+            PhotoImportUiState(title = "Mijn foto", difficulty = it.difficulty)
         }
     }
 
@@ -284,15 +287,13 @@ class PhotoImportViewModel(
     }
 
     companion object {
-        const val MIN_COLORS = 12
-        const val MAX_COLORS = 20
-
         fun factory(container: AppContainer) = viewModelFactory {
             initializer {
                 PhotoImportViewModel(
                     context = container.appContext,
                     userPlateStore = container.userPlateStore,
                     plateRepository = container.plateRepository,
+                    settingsRepository = container.settingsRepository,
                 )
             }
         }

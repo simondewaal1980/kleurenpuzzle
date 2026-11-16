@@ -23,12 +23,24 @@ Een native Android "paint by number"-app voor volwassenen, gericht op ontspannin
 
 ## 3. Het plaatformaat en de difficulty-constant
 
-### 3.1 Vaste moeilijkheid
-Alle kleurplaten worden gegenereerd met **zelfde pijplijn-parameters**, zodat de moeilijkheid constant blijft:
-- Vast palet per plaat: **12–20 kleuren**.
+### 3.1 Moeilijkheid: standaard vast, vijf niveaus voor eigen foto's
+De meegeleverde landschappen worden met **dezelfde pijplijn-parameters** gegenereerd, zodat hun moeilijkheid constant blijft:
+- Palet per plaat: **12–20 kleuren**, standaard 14.
 - Aantal regio's: **300–800** (afhankelijk van detail, maar binnen vaste bandbreedte).
-- Minimale regio-oppervlakte: regio's kleiner dan ~0,05% van het canvas worden samengevoegd met een buurregio (voomt gefrustreerde mini-tikjes).
+- Minimale regio-oppervlakte: regio's kleiner dan ~0,05% van het canvas worden samengevoegd met een buurregio (voorkomt gefrustreerde mini-tikjes).
 - Nummers altijd zichtbaar (optioneel uitschakelbaar), geen tijdsdruk, geen lives/energy-systeem.
+
+Voor **eigen foto's** kiest de gebruiker een moeilijkheidsgraad uit vijf niveaus. "Normaal" is identiek aan de vaste moeilijkheid van de landschappen; de andere niveaus variëren het aantal kleuren, de bandbreedte van het aantal vlakken en de minimale vlakgrootte:
+
+| Niveau | Kleuren | Vlakken (streef) | Min. vlakgrootte |
+|---|---|---|---|
+| Zeer makkelijk | 12 | 150–300 | 0,12% |
+| Makkelijk | 13 | 220–450 | 0,08% |
+| Normaal | 14 | 300–800 | 0,04% |
+| Moeilijk | 17 | 450–800 | 0,03% |
+| Zeer moeilijk | 20 | 600–800 | 0,02% |
+
+De instellingen kiezen de standaard voor nieuwe foto's; op het fotoscherm kan de gebruiker per foto afwijken. De niveaus staan in `pipeline/…/Difficulty.kt` en vertalen zich naar `ConvertOptions`, zodat app en generator dezelfde code blijven gebruiken.
 
 ### 3.2 Bestandsformaat per kleurplaat
 Compact binair formaat (of protobuf), per plaat ~200–500 KB:
@@ -54,7 +66,7 @@ Twee uitvoeringen van **hetzelfde algoritme**, zodat moeilijkheid overal consist
 2. **On-device (Kotlin, in de app)** — voor "eigen foto toevoegen":
    - Identieke stappen, draaiend op `Dispatchers.Default` met coroutines.
    - Doel: < 5 s voor een 12 MP-foto op A54 (Nord 4 ruimschoots sneller).
-   - UX: foto kiezen → voorbeeld met instelbaar kleuraantal (standaard = vaste difficulty) → genereren met voortgangsbalk → plaat verschijnt onder "Mijn foto's".
+   - UX: foto kiezen → voorbeeld met moeilijkheidsgraadkeuze van vijf niveaus (standaard = vaste difficulty) → genereren met voortgangsbalk → plaat verschijnt onder "Mijn foto's".
    - Fallback: bij zeer complexe foto's automatisch iets grovere kwantisatie om binnen de regio-bandbreedte (300–800) te blijven.
 
 ## 5. App-structuur en schermen
@@ -81,7 +93,7 @@ tools/
    - Zoom-naar-regio bij selectie uit palet (optioneel).
    - Voltooien: rustige reveal-animatie (plaat zonder nummers/lijnen), delen als PNG.
 3. **Foto toevoegen**: Photo Picker → voorbeeld/generate-scherm → resultaat in "Mijn foto's".
-4. **Instellingen**: nummers aan/uit, hint-modus, geluid/haptics, donkere modus, kleurblind-modus (symbolen/patronen bij nummers), data wissen.
+4. **Instellingen**: nummers aan/uit, hint-modus, geluid/haptics, donkere modus, kleurblind-modus (symbolen/patronen bij nummers), standaardmoeilijkheidsgraad (vijf niveaus), data wissen.
 
 **Ontspannings-UX-principes:** geen timers, geen reclame tijdens het kleuren, geen energy-systeem, gedempte kleuren UI, optionele zachte achtergrondgeluiden, haptische tick bij vullen.
 
@@ -118,7 +130,7 @@ Totaal: ~9–10 weken (part-time langer).
 
 ## 9. Teststrategie
 
-- **Unit**: kwantisatie/merging, plaatformaat encode/decode, voortgang/undo-logica.
+- **Unit**: kwantisatie/merging, plaatformaat encode/decode, moeilijkheidsgraad → pijplijnparameters, voortgang/undo-logica.
 - **Instrumented (Compose UI tests)**: tik → regio vult, paletselectie, zoom.
 - **Device-matrix**: OnePlus Nord 4 (daily driver), Samsung A54 (performance-gate); optioneel Firebase Test Lab voor breedte.
 - **Performance-gates per release**: p95 frame < 16 ms, geen ANR's, geheugen < 200 MB, cold start < 2 s — gemeten op de A54.

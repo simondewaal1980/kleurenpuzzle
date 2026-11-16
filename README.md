@@ -25,14 +25,17 @@ fotosegmentatie tot Compose-UI, Canvas-rendering en opslag.
   - onbeperkt undo binnen de sessie;
   - automatisch opslaan na elke actie;
   - rustige reveal-animatie bij voltooiing en delen als PNG.
-- **Eigen foto's**: Photo Picker → voorbeeld → kleuraantal kiezen → genereren op het
-  toestel → de plaat verschijnt onder "Mijn foto's". Geen upload, geen toestemmingen.
+- **Eigen foto's**: Photo Picker → voorbeeld → moeilijkheidsgraad kiezen (vijf
+  niveaus) → genereren op het toestel → de plaat verschijnt onder "Mijn foto's".
+  Geen upload, geen toestemmingen.
 - **Bibliotheek** met drie tabbladen: Landschappen, Verder gaan en Mijn foto's.
   Voortgang en voltooiing zijn direct zichtbaar.
 - **Instellingen**: nummers aan/uit, hint-modus, kleurblind-modus, haptics,
-  magisch vullen, licht/donker/systeemthema en gegevens wissen.
-- **Tests**: unit tests voor het bestandsformaat en de pijplijn, een content-QA-test
-  over alle meegeleverde platen, en instrumented Compose-tests (o.a. pinch-zoom).
+  magisch vullen, standaardmoeilijkheidsgraad (vijf niveaus),
+  licht/donker/systeemthema en gegevens wissen.
+- **Tests**: unit tests voor het bestandsformaat, de pijplijn en de vijf
+  moeilijkheidsniveaus, een content-QA-test over alle meegeleverde platen, en
+  instrumented Compose-tests (o.a. pinch-zoom).
 - **Offline generator-CLI** die exact dezelfde pijplijn gebruikt als de app.
 
 ### Status ten opzichte van `plan.md`
@@ -51,13 +54,13 @@ fotosegmentatie tot Compose-UI, Canvas-rendering en opslag.
 
 | Plan | In deze repo |
 |---|---|
-| 3.1 vaste moeilijkheid | `ConvertOptions` (12–20 kleuren, streefband 300–800, kleine vlakken samenvoegen) |
+| 3.1 moeilijkheid | `ConvertOptions` (12–20 kleuren, streefband 300–800) + `Difficulty` met vijf niveaus voor eigen foto's |
 | 3.2 plaatformaat | `format/` + [docs/FORMAT.md](docs/FORMAT.md); id-map voor hit-testing; preview-JPEG |
 | 4 segmentatiepijplijn | `pipeline/`: downscalen, smoothing, k-means, kleine vlakken mergen, contouren + DP |
 | 5.1 bibliotheek | `ui/library/`: packs, Verder gaan, Mijn foto's, voortgang, verwijderen |
 | 5.2 kleurbord | `ui/board/`: zoom/pan, palet, hint, magisch vullen, undo, autosave, reveal, delen |
 | 5.3 foto toevoegen | `ui/photo/`: Photo Picker + on-device pipeline + voortgang/annuleren |
-| 5.4 instellingen | `ui/settings/`: nummers, hints, kleurblind, haptics, thema, data wissen |
+| 5.4 instellingen | `ui/settings/`: nummers, hints, kleurblind, haptics, thema, moeilijkheidsgraad, data wissen |
 | 6 performance | bitmaplagen, dirty rects, id-map, nummer-culling, LRU-caches; tiled zoom is next |
 | 7 content | 10 CC0-landschappen in 3 packs; bronnen en credits in `content/` |
 | 8 mijlpalen | fasen 0–4 afgerond, fase 5 grotendeels |
@@ -211,7 +214,22 @@ een plaat buiten de streefband valt.
 
 ### Moeilijkheid tunen
 
-In `pipeline/src/main/kotlin/nl/kleuren/pipeline/ConvertOptions.kt`:
+De vijf niveaus staan in `pipeline/src/main/kotlin/nl/kleuren/pipeline/Difficulty.kt`.
+Elk niveau vertaalt zich naar `ConvertOptions`:
+
+| Niveau | Kleuren | Vlakken (streef) | Min. vlakgrootte | Contourvereenvoudiging |
+|---|---|---|---|---|
+| Zeer makkelijk | 12 | 150–300 | 0,12% | 2,4 px |
+| Makkelijk | 13 | 220–450 | 0,08% | 2,0 px |
+| Normaal | 14 | 300–800 | 0,04% | 1,6 px |
+| Moeilijk | 17 | 450–800 | 0,03% | 1,4 px |
+| Zeer moeilijk | 20 | 600–800 | 0,02% | 1,2 px |
+
+"Normaal" is exact gelijk aan `ConvertOptions()` en dus aan de vaste moeilijkheid
+van de meegeleverde landschappen. De instellingen kiezen de standaard voor nieuwe
+eigen foto's; op het fotoscherm kan de gebruiker per foto afwijken.
+
+De onderliggende parameters in `pipeline/src/main/kotlin/nl/kleuren/pipeline/ConvertOptions.kt`:
 
 | Parameter | Effect |
 |---|---|

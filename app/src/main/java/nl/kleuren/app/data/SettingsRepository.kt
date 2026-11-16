@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import nl.kleuren.pipeline.Difficulty
 
 /** Donker/licht: volg het systeem of forceer een keuze. */
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
@@ -25,6 +26,7 @@ data class AppSettings(
     val magicFillEnabled: Boolean = true,
     val colorBlindMode: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val difficulty: Difficulty = Difficulty.DEFAULT,
 )
 
 /**
@@ -50,6 +52,7 @@ class SettingsRepository(context: Context) {
         themeMode = runCatching {
             ThemeMode.valueOf(preferences.getString(KEY_THEME, ThemeMode.SYSTEM.name)!!)
         }.getOrDefault(ThemeMode.SYSTEM),
+        difficulty = Difficulty.fromStorage(preferences.getString(KEY_DIFFICULTY, null)),
     )
 
     fun setShowNumbers(value: Boolean) = update(KEY_SHOW_NUMBERS, value)
@@ -61,6 +64,11 @@ class SettingsRepository(context: Context) {
     fun setThemeMode(mode: ThemeMode) {
         preferences.edit().putString(KEY_THEME, mode.name).apply()
         _settings.value = _settings.value.copy(themeMode = mode)
+    }
+
+    fun setDifficulty(difficulty: Difficulty) {
+        preferences.edit().putString(KEY_DIFFICULTY, difficulty.name).apply()
+        _settings.value = _settings.value.copy(difficulty = difficulty)
     }
 
     private fun update(key: String, value: Boolean) {
@@ -82,5 +90,6 @@ class SettingsRepository(context: Context) {
         const val KEY_MAGIC = "magic_fill_enabled"
         const val KEY_COLOR_BLIND = "color_blind_mode"
         const val KEY_THEME = "theme_mode"
+        const val KEY_DIFFICULTY = "difficulty"
     }
 }
