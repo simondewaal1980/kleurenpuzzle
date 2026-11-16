@@ -1,0 +1,36 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+local.properties
+captures/
+
+# Android build-artefacten
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+app/release/
+
+# Native build
+.externalNativeBuild/
+.cxx/
+
+# Besturingssysteem
+.DS_Store
+Thumbs.db
+
+# Tijdelijke bestanden
+*.tmp
+*.log
+
+# Gegenereerde test- en profilerapporten
+app/build/reports/
+
+# Kotlin build-cache
+.kotlin/

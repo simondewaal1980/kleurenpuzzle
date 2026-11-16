@@ -1,0 +1,60 @@
+package nl.kleuren.app.data
+
+import kotlinx.serialization.Serializable
+
+/**
+ * JSON-modellen die precies passen bij het manifest dat de generator schrijft
+ * (app/src/main/assets/plates/manifest.json).
+ *
+ * Omdat we `ignoreUnknownKeys = true` gebruiken, kan de generator later extra
+ * velden toevoegen zonder dat oude app-versies stukgaan.
+ */
+@Serializable
+data class ManifestRoot(
+    val version: Int = 1,
+    val generatedAt: String = "",
+    val packs: List<ManifestPack> = emptyList(),
+)
+
+@Serializable
+data class ManifestPack(
+    val id: String,
+    val title: String,
+    val description: String = "",
+    val plates: List<ManifestPlate> = emptyList(),
+)
+
+@Serializable
+data class ManifestPlate(
+    val id: String,
+    val title: String,
+    val subtitle: String = "",
+    val asset: String,
+    val preview: String,
+    val regionCount: Int = 0,
+    val paletteSize: Int = 0,
+    val credit: String = "",
+    val license: String = "",
+    val sourceUrl: String = "",
+)
+
+/**
+ * Index van de platen die de gebruiker zelf heeft gemaakt ("Mijn foto's").
+ * De bestanden zelf staan naast deze index in filesDir/myplates/.
+ */
+@Serializable
+data class UserPlateIndex(
+    val version: Int = 1,
+    val plates: List<UserPlateEntry> = emptyList(),
+)
+
+@Serializable
+data class UserPlateEntry(
+    val id: String,
+    val title: String,
+    val plateFile: String,
+    val previewFile: String,
+    val regionCount: Int,
+    val paletteSize: Int,
+    val createdAt: Long,
+)

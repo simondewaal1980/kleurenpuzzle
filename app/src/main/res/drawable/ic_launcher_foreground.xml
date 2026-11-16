@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Voorgrond van het app-icoon: drie overlappende kleurvlakken, als een palet.
+  Vector-tekeningen schalen zonder kwaliteitsverlies naar alle schermdichtheden.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#7C8F6E"
+        android:pathData="M54,30a16,16 0,1 0,0.01 0z" />
+    <path
+        android:fillColor="#C07A5A"
+        android:pathData="M40,58a16,16 0,1 0,0.01 0z" />
+    <path
+        android:fillColor="#5E7C8A"
+        android:pathData="M68,58a16,16 0,1 0,0.01 0z" />
+    <path
+        android:fillColor="#FFFDF8"
+        android:fillAlpha="0.92"
+        android:pathData="M54,46a8,8 0,1 0,0.01 0z" />
+</vector>

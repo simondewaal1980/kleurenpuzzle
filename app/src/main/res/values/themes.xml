@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Een zo minimaal mogelijke XML-theme. Alle echte kleuren, typografie en
+      vormen staan in Compose (ui/theme/Theme.kt). De app gebruikt edge-to-edge:
+      de systeembalken zijn transparant en de content loopt eronder door.
+    -->
+    <style name="Theme.Kleuren" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+</resources>

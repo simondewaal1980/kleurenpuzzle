@@ -1,0 +1,125 @@
+{
+  "packs": [
+    {
+      "id": "alpen",
+      "title": "Alpen & Meren",
+      "description": "Rustige bergmeren, machtige toppen en zachte wolken.",
+      "plates": [
+        {
+          "id": "alpen-lautersee",
+          "title": "Lautersee",
+          "subtitle": "Beieren, Duitsland",
+          "source": "source/alpen-lautersee.jpg",
+          "credit": "Taubenflieger68 / Wikimedia Commons",
+          "license": "CC0",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lautersee_2026.jpg",
+          "colors": 16
+        },
+        {
+          "id": "alpen-dolomieten",
+          "title": "Dolomieten",
+          "subtitle": "Italië",
+          "source": "source/alpen-dolomieten.jpg",
+          "credit": "Tomzawa / Wikimedia Commons",
+          "license": "CC0",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Croda_dei_Toni_2024.07_1.jpg",
+          "colors": 16
+        },
+        {
+          "id": "alpen-wolken",
+          "title": "Wolken boven de bergen",
+          "subtitle": "Alpen",
+          "source": "source/alpen-wolken.jpg",
+          "credit": "Pixel.la / Wikimedia Commons",
+          "license": "CC0",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Landscape-mountains-nature-clouds_(24326664915).jpg",
+          "colors": 16
+        }
+      ]
+    },
+    {
+      "id": "mediterraan",
+      "title": "Mediterraan",
+      "description": "Zonnige kustdorpjes, lavendelvelden en heuvels.",
+      "plates": [
+        {
+          "id": "med-cinque-terre",
+          "title": "Cinque Terre",
+          "subtitle": "Riomaggiore, Italië",
+          "source": "source/med-cinque-terre.jpg",
+          "credit": "Raul Taciu / Unsplash via Wikimedia Commons",
+          "license": "CC0",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Parco_Nazionale_delle_Cinque_Terre,_Riomaggiore,_Italy_(Unsplash).jpg",
+          "colors": 16
+        },
+        {
+          "id": "med-santorini",
+          "title": "Santorini",
+          "subtitle": "Ia, Griekenland",
+          "source": "source/med-santorini.jpg",
+          "credit": "MonAmi / Wikimedia Commons",
+          "license": "CC0",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ia_Santorini_2011.JPG",
+          "colors": 16
+        },
+        {
+          "id": "med-lavendel",
+          "title": "Lavendelvelden",
+          "subtitle": "Provence",
+          "source": "source/med-lavendel.jpg",
+          "credit": "Patrick Van Stee / Unsplash via Wikimedia Commons",
+          "license": "CC0",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lavender-meadow_(Unsplash).jpg",
+          "colors": 16
+        },
+        {
+          "id": "med-toscane",
+          "title": "Toscane",
+          "subtitle": "Montepulciano, Italië",
+          "source": "source/med-toscane.jpg",
+          "credit": "Bischoff49 / Wikimedia Commons",
+          "license": "CC0",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Montepulciano_Toscana_Italy_City_Landscape.jpg",
+          "colors": 16
+        }
+      ]
+    },
+    {
+      "id": "noord-west",
+      "title": "Noord & West",
+      "description": "Fjorden, kliffen en uitgestrekte hooglanden.",
+      "plates": [
+        {
+          "id": "noord-fjord",
+          "title": "Noorse fjord",
+          "subtitle": "Noorwegen",
+          "source": "source/noord-fjord.jpg",
+          "credit": "Danny Froese / Unsplash via Wikimedia Commons",
+          "license": "CC0",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Road_along_the_fjord_(Unsplash).jpg",
+          "colors": 16
+        },
+        {
+          "id": "noord-moher",
+          "title": "Kliffen van Moher",
+          "subtitle": "Ierland",
+          "source": "source/noord-moher.jpg",
+          "credit": "Malte Baumann / Unsplash via Wikimedia Commons",
+          "license": "CC0",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cliffs_of_Moher_-_Unsplash.jpeg",
+          "colors": 16
+        },
+        {
+          "id": "noord-schotland",
+          "title": "Schotse hooglanden",
+          "subtitle": "Schotland",
+          "source": "source/noord-schotland.jpg",
+          "credit": "Vacaped3 / Wikimedia Commons",
+          "license": "CC0",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Scenic_View_of_Scottish_Highlands_and_Loch.jpg",
+          "colors": 16
+        }
+      ]
+    }
+  ]
+}
