@@ -1,0 +1,4425 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Het codeboek van Kleuren: een beginnersvriendelijke rondleiding door de code van een Android paint-by-numbers-app. Van foto tot kleurplaat, in gewone taal.">
+<meta name="color-scheme" content="light dark">
+<title>Codeboek · Kleuren</title>
+<style>
+/* =========================================================
+   Kleuren — codeboek
+   Eén HTML-bestand, geen externe bibliotheken.
+   ========================================================= */
+
+:root {
+  color-scheme: light;
+  --paper: #f7f3e8;
+  --paper-2: #fdfaf2;
+  --card: #fffdf8;
+  --ink: #29302a;
+  --muted: #687064;
+  --line: #ded7c7;
+  --line-strong: #c8bfa9;
+  --accent: #486b50;
+  --accent-strong: #38553f;
+  --accent-soft: #e7efe3;
+  --accent-2: #a95f40;
+  --accent-2-soft: #f6e7dd;
+  --warn: #8a6823;
+  --warn-soft: #f6edd6;
+  --code-bg: #232820;
+  --code-ink: #f1eee4;
+  --code-muted: #aeb6a6;
+  --shadow: 0 20px 60px rgba(50, 44, 30, .13);
+  --shadow-soft: 0 8px 24px rgba(50, 44, 30, .07);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --sidebar-w: 278px;
+  --maxw: 1180px;
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #161914;
+  --paper-2: #1b1f18;
+  --card: #20251d;
+  --ink: #ece9dc;
+  --muted: #a9afa0;
+  --line: #343a2e;
+  --line-strong: #4a5240;
+  --accent: #a4c39a;
+  --accent-strong: #c2d9b8;
+  --accent-soft: #273125;
+  --accent-2: #e2a17c;
+  --accent-2-soft: #35261f;
+  --warn: #e0bd7a;
+  --warn-soft: #332b1b;
+  --code-bg: #0d100c;
+  --code-ink: #ece9dc;
+  --code-muted: #98a18f;
+  --shadow: 0 20px 60px rgba(0, 0, 0, .4);
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, .22);
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 92px;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img { max-width: 100%; height: auto; display: block; }
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover { color: var(--accent-2); }
+
+button { font: inherit; }
+
+:focus-visible {
+  outline: 3px solid var(--accent-2);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -100px;
+  z-index: 200;
+  padding: 10px 16px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 10px;
+  text-decoration: none;
+}
+
+.skip-link:focus { top: 12px; }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* ---------- Voortgang en topbar ---------- */
+
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 120;
+  background: transparent;
+  pointer-events: none;
+}
+
+.scroll-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width .08s linear;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--paper-2);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .35);
+}
+
+.topbar-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 11px 22px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  flex: 0 0 auto;
+}
+
+.brand:hover { color: var(--ink); }
+
+.brand small {
+  display: block;
+  font-weight: 500;
+  color: var(--muted);
+  font-size: .72rem;
+  letter-spacing: .02em;
+  line-height: 1.2;
+}
+
+.brand-text { line-height: 1.15; }
+
+.logo {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  flex: 0 0 auto;
+}
+
+.logo i {
+  display: block;
+  border-radius: 4px;
+  background: var(--accent);
+}
+
+.logo i:nth-child(1) { background: #486b50; }
+.logo i:nth-child(2) { background: #b46948; }
+.logo i:nth-child(3) { background: #d8c28d; }
+.logo i:nth-child(4) { background: #789a8d; }
+
+.topnav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.topnav a {
+  padding: 7px 10px;
+  border-radius: 8px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: .88rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.topnav a:hover {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 7px 13px;
+  cursor: pointer;
+  font-size: .85rem;
+  font-weight: 600;
+  line-height: 1.2;
+  box-shadow: var(--shadow-soft);
+}
+
+.icon-button:hover {
+  border-color: var(--line-strong);
+  background: var(--accent-soft);
+}
+
+.theme-icon { font-size: 1rem; line-height: 1; }
+
+.menu-button { display: none; }
+
+/* ---------- Layout ---------- */
+
+.layout {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 22px;
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  gap: 50px;
+}
+
+.sidebar {
+  position: sticky;
+  top: 68px;
+  height: calc(100vh - 68px);
+  overflow-y: auto;
+  padding: 30px 8px 40px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.toc-title {
+  margin: 0 0 10px 10px;
+  color: var(--muted);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.toc-list,
+.toc-sub {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.toc-list > li { margin: 2px 0; }
+
+.toc a {
+  display: block;
+  padding: 6px 11px;
+  border-left: 2px solid transparent;
+  border-radius: 0 9px 9px 0;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: .9rem;
+  line-height: 1.4;
+}
+
+.toc a:hover {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.toc a.active {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
+  font-weight: 700;
+}
+
+.toc-sub {
+  margin: 0 0 5px 13px;
+  border-left: 1px solid var(--line);
+}
+
+.toc-sub a {
+  padding: 4px 10px;
+  font-size: .8rem;
+  border-left: 0;
+}
+
+.toc-meta {
+  margin: 22px 8px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.toc-meta strong { color: var(--ink); }
+
+.nav-backdrop {
+  display: none;
+}
+
+main {
+  min-width: 0;
+  padding-bottom: 80px;
+}
+
+section[id] {
+  scroll-margin-top: 92px;
+  padding-top: 48px;
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 26px;
+  align-items: center;
+  padding: 52px 0 26px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--accent-2);
+  font-size: .74rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0 0 18px;
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 6vw, 4.7rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -.025em;
+}
+
+h1 em {
+  color: var(--accent);
+  font-style: italic;
+}
+
+.lead {
+  max-width: 60ch;
+  margin: 0 0 22px;
+  color: var(--muted);
+  font-size: 1.13rem;
+  line-height: 1.7;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 20px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fffdf7;
+  font-size: .92rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: var(--shadow-soft);
+  transition: transform .15s ease, background .15s ease;
+}
+
+.button:hover {
+  background: var(--accent-strong);
+  color: #fffdf7;
+  transform: translateY(-1px);
+}
+
+.button.secondary {
+  background: var(--card);
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.button.secondary:hover {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: .82rem;
+}
+
+.hero-meta li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.hero-meta li::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-2);
+}
+
+.phone-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 660px;
+  min-height: 430px;
+  margin: 4px auto 8px;
+  isolation: isolate;
+}
+
+.phone-stage::before {
+  content: "";
+  position: absolute;
+  inset: 12% 8% 4%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 60%, var(--accent-soft), transparent 68%);
+  z-index: -1;
+}
+
+.phone {
+  width: 182px;
+  flex: 0 0 auto;
+  padding: 6px;
+  border-radius: 30px;
+  background: #22251f;
+  border: 1px solid #3b3e35;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.phone img {
+  width: 100%;
+  aspect-ratio: 9 / 20;
+  object-fit: cover;
+  border-radius: 24px;
+}
+
+.phone.one {
+  width: 152px;
+  transform: rotate(-8deg) translate(22px, 24px);
+  opacity: .9;
+  z-index: 1;
+}
+
+.phone.two {
+  transform: rotate(2deg) translateY(-6px);
+  z-index: 3;
+}
+
+.phone.three {
+  width: 152px;
+  transform: rotate(9deg) translate(-22px, 30px);
+  opacity: .9;
+  z-index: 2;
+}
+
+.phone-caption {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper-2);
+  color: var(--muted);
+  font-size: .7rem;
+  white-space: nowrap;
+}
+
+/* ---------- Typografie ---------- */
+
+.chapter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: var(--accent-2);
+  font-size: .74rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.chapter::after {
+  content: "";
+  width: 42px;
+  height: 1px;
+  background: var(--accent-2);
+  opacity: .45;
+}
+
+h2 {
+  margin: 0 0 .4em;
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 3.5vw, 2.85rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -.015em;
+}
+
+h3 {
+  margin: 1.9em 0 .5em;
+  font-size: 1.25rem;
+  line-height: 1.3;
+  letter-spacing: -.01em;
+}
+
+h4 {
+  margin: 1.5em 0 .4em;
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
+p,
+li { max-width: 72ch; }
+
+p { margin: 0 0 1em; }
+
+ul,
+ol { padding-left: 1.3em; }
+
+li { margin: .35em 0; }
+
+strong { color: var(--ink); }
+
+.lead-in {
+  max-width: 72ch;
+  color: var(--muted);
+  font-size: 1.04rem;
+}
+
+.small {
+  color: var(--muted);
+  font-size: .86rem;
+}
+
+/* ---------- Kaarten, roosters en kaders ---------- */
+
+.card {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+}
+
+.card h3,
+.card h4 { margin-top: 0; }
+
+.card p:last-child,
+.card ul:last-child { margin-bottom: 0; }
+
+.grid-2,
+.grid-3,
+.lesson-grid {
+  display: grid;
+  gap: 14px;
+  margin: 22px 0;
+}
+
+.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.lesson-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+
+.card-number {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.callout {
+  position: relative;
+  margin: 22px 0;
+  padding: 16px 18px 16px 20px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--accent-soft);
+}
+
+.callout p:last-child,
+.callout ul:last-child { margin-bottom: 0; }
+
+.callout .label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--accent-strong);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.callout.tip {
+  border-left-color: var(--accent-2);
+  background: var(--accent-2-soft);
+}
+
+.callout.tip .label { color: var(--accent-2); }
+
+.callout.warn {
+  border-left-color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.callout.warn .label { color: var(--warn); }
+
+.callout.plain {
+  border-left-color: var(--line-strong);
+  background: var(--paper-2);
+}
+
+.callout.plain .label { color: var(--muted); }
+
+.analogy {
+  padding: 20px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+}
+
+.analogy::before {
+  content: "Zo kun je het je voorstellen";
+  display: block;
+  margin-bottom: 7px;
+  color: var(--accent-2);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.analogy p:last-child { margin-bottom: 0; }
+
+/* ---------- Code ---------- */
+
+code {
+  font-family: var(--font-mono);
+  font-size: .88em;
+}
+
+p code,
+li code,
+td code,
+th code {
+  padding: 2px 5px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--paper-2);
+  color: var(--ink);
+  overflow-wrap: break-word;
+}
+
+/* Paden mogen netjes na een schuine streep afbreken. */
+code wbr { overflow-wrap: normal; }
+
+.codeblock {
+  margin: 18px 0;
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--code-bg);
+  box-shadow: var(--shadow-soft);
+}
+
+.codeblock-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, .07);
+  background: rgba(255, 255, 255, .045);
+  color: var(--code-muted);
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  line-height: 1.35;
+}
+
+.codeblock-bar .file {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy-btn {
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, .07);
+  color: var(--code-ink);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.copy-btn:hover { background: rgba(255, 255, 255, .14); }
+
+.codeblock pre {
+  margin: 0;
+  padding: 17px 18px 19px;
+  overflow-x: auto;
+  color: var(--code-ink);
+  font-family: var(--font-mono);
+  font-size: .84rem;
+  line-height: 1.62;
+  tab-size: 4;
+}
+
+.codeblock pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+
+.codeblock .comment { color: var(--code-muted); }
+.codeblock .kw { color: #e9c46a; }
+.codeblock .str { color: #a8d5a2; }
+.codeblock .num { color: #f4a261; }
+
+/* ---------- Tabellen ---------- */
+
+.table-wrap {
+  margin: 20px 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow-x: auto;
+  background: var(--card);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .9rem;
+  line-height: 1.5;
+}
+
+th,
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: var(--paper-2);
+  color: var(--ink);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .03em;
+}
+
+tbody tr:last-child td { border-bottom: 0; }
+
+tbody tr:hover { background: var(--paper-2); }
+
+td.num { font-family: var(--font-mono); white-space: nowrap; }
+
+/* ---------- Architectuur ---------- */
+
+.arch {
+  margin: 26px 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(var(--paper-2), var(--paper-2)) padding-box,
+    repeating-linear-gradient(0deg, transparent, transparent 27px, var(--line) 27px, var(--line) 28px) border-box;
+}
+
+.arch-row {
+  display: grid;
+  gap: 12px;
+}
+
+.arch-row.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.arch-card {
+  padding: 15px 17px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+}
+
+.arch-card strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 1rem;
+}
+
+.arch-card span {
+  display: block;
+  color: var(--muted);
+  font-size: .84rem;
+  line-height: 1.45;
+}
+
+.arch-card.pure {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.arch-card.pure strong { color: var(--accent-strong); }
+
+.arch-card.android { border-color: var(--accent-2); }
+
+.arch-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .03em;
+}
+
+.arch-connector::before,
+.arch-connector::after {
+  content: "";
+  flex: 0 1 70px;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.arch-connector.down {
+  flex-direction: column;
+  gap: 0;
+}
+
+.arch-connector.down::before {
+  width: 1px;
+  height: 26px;
+  flex: 0 0 26px;
+}
+
+.arch-connector.down::after {
+  content: "↓";
+  width: auto;
+  height: auto;
+  background: none;
+  color: var(--accent);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 20px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flow li {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  margin: 0;
+  padding: 5px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+.flow li:not(:last-child)::after {
+  content: "→";
+  margin-left: 10px;
+  color: var(--accent-2);
+  font-weight: 400;
+}
+
+/* ---------- Stappen / tijdlijn ---------- */
+
+.timeline {
+  position: relative;
+  margin: 28px 0;
+  padding-left: 56px;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 23px;
+  top: 16px;
+  bottom: 16px;
+  width: 2px;
+  background: linear-gradient(var(--accent), var(--accent-2));
+  opacity: .35;
+}
+
+.step {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.step:last-child { margin-bottom: 0; }
+
+.step-num {
+  position: absolute;
+  left: -56px;
+  top: 0;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--accent-strong);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  box-shadow: 0 0 0 6px var(--paper);
+}
+
+.step-card {
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+}
+
+.step-card h3 {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+}
+
+.step-card p:last-child { margin-bottom: 0; }
+
+.step-tag {
+  display: inline-block;
+  margin-bottom: 7px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+/* ---------- Lagen / bord ---------- */
+
+.layer-stack {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0;
+}
+
+.layer {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+}
+
+.layer:nth-child(2) { margin-left: 18px; }
+.layer:nth-child(3) { margin-left: 36px; }
+
+.layer-num {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.layer strong { display: block; margin-bottom: 2px; }
+.layer span { color: var(--muted); font-size: .88rem; }
+
+.tapflow {
+  display: flex;
+  gap: 0;
+  margin: 22px 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tapflow li {
+  position: relative;
+  flex: 1 0 132px;
+  margin: 0;
+  padding: 14px 22px 14px 14px;
+  border: 1px solid var(--line);
+  border-right: 0;
+  background: var(--card);
+  font-size: .8rem;
+  line-height: 1.4;
+}
+
+.tapflow li:first-child { border-radius: 12px 0 0 12px; }
+.tapflow li:last-child { border-right: 1px solid var(--line); border-radius: 0 12px 12px 0; }
+
+.tapflow li::after {
+  content: "›";
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--accent-2);
+  font-size: 1.2rem;
+}
+
+.tapflow li:last-child::after { content: ""; }
+
+.tapflow b {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--accent-strong);
+  font-family: var(--font-mono);
+  font-size: .7rem;
+}
+
+.idmap-demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 22px;
+  margin: 22px 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.idmap-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  width: 186px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.idmap-grid span {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-right: 1px solid rgba(255, 255, 255, .55);
+  border-bottom: 1px solid rgba(255, 255, 255, .55);
+  color: #29302a;
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  font-weight: 700;
+}
+
+.idmap-grid span:nth-child(6n) { border-right: 0; }
+.idmap-grid span:nth-last-child(-n + 6) { border-bottom: 0; }
+.idmap-grid span.target { outline: 3px solid var(--accent-2); outline-offset: -3px; }
+
+.idmap-grid .c1 { background: #cfdcc5; }
+.idmap-grid .c2 { background: #e7c8a9; }
+.idmap-grid .c3 { background: #b9d1d3; }
+.idmap-grid .c4 { background: #e8dfb8; }
+.idmap-grid .c5 { background: #d8c4d8; }
+
+.idmap-demo p { flex: 1 1 260px; margin: 0; }
+
+/* ---------- Screenshots ---------- */
+
+.shots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 26px 0;
+}
+
+.shot {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+}
+
+.shot img {
+  width: 100%;
+  border-radius: 11px;
+  background: #222;
+}
+
+.shot figcaption {
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: .8rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* ---------- Lessen ---------- */
+
+.lesson {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+}
+
+.lesson h3 {
+  margin: 0 0 5px;
+  font-size: 1rem;
+}
+
+.lesson p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: .88rem;
+}
+
+.lesson .codeblock {
+  margin: 10px 0 0;
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.lesson .codeblock-bar { display: none; }
+
+.lesson .codeblock pre {
+  padding: 12px 13px;
+  font-size: .79rem;
+}
+
+/* ---------- Woordenboek ---------- */
+
+.glossary-controls {
+  position: sticky;
+  top: 68px;
+  z-index: 8;
+  margin: 0 -4px 16px;
+  padding: 10px 4px;
+  background: var(--paper);
+}
+
+.search-wrap {
+  position: relative;
+}
+
+.search-wrap::before {
+  content: "⌕";
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-53%);
+  color: var(--muted);
+  font-size: 1.25rem;
+  pointer-events: none;
+}
+
+#glossary-search {
+  width: 100%;
+  padding: 12px 16px 12px 43px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: .9rem;
+  box-shadow: var(--shadow-soft);
+}
+
+#glossary-search::placeholder { color: var(--muted); }
+
+.glossary-count {
+  margin: 7px 4px 0;
+  color: var(--muted);
+  font-size: .76rem;
+}
+
+.glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.term {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--card);
+}
+
+.term h3 {
+  margin: 0 0 3px;
+  font-size: .98rem;
+}
+
+.term p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .86rem;
+  line-height: 1.55;
+}
+
+.term[hidden] { display: none; }
+
+.glossary-empty {
+  margin: 22px 0;
+  padding: 20px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ---------- FAQ ---------- */
+
+.faq-list { margin: 22px 0; }
+
+details.faq {
+  margin: 9px 0;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--card);
+}
+
+details.faq[open] {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+details.faq summary {
+  position: relative;
+  padding: 15px 32px 15px 0;
+  cursor: pointer;
+  font-weight: 700;
+  line-height: 1.4;
+  list-style: none;
+}
+
+details.faq summary::-webkit-details-marker { display: none; }
+
+details.faq summary::after {
+  content: "+";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--accent-2);
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-weight: 400;
+}
+
+details.faq[open] summary::after { content: "−"; }
+
+details.faq .answer {
+  padding: 0 0 16px;
+  color: var(--muted);
+  font-size: .93rem;
+}
+
+details.faq .answer p:last-child { margin-bottom: 0; }
+
+/* ---------- Oefeningen ---------- */
+
+.exercise-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 22px 0;
+}
+
+.exercise {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+}
+
+.exercise .level {
+  display: inline-block;
+  align-self: flex-start;
+  margin-bottom: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.exercise h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.exercise ol,
+.exercise ul { margin: 0 0 12px; padding-left: 1.15em; }
+
+.exercise li {
+  margin: .45em 0;
+  font-size: .89rem;
+}
+
+.exercise details {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.exercise details summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: .84rem;
+  font-weight: 700;
+}
+
+.exercise details p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: .84rem;
+}
+
+/* ---------- Bestandstabel ---------- */
+
+.filemap td:first-child {
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  white-space: nowrap;
+}
+
+.filemap td:first-child a { text-decoration: none; }
+.filemap td:first-child a:hover { text-decoration: underline; }
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+  margin-top: 60px;
+  border-top: 1px solid var(--line);
+  background: var(--paper-2);
+}
+
+.footer-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 30px 22px 46px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+  color: var(--muted);
+  font-size: .84rem;
+}
+
+.footer-inner p { max-width: 55ch; margin: 0 0 6px; }
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.footer-links a { color: var(--accent); font-weight: 600; }
+
+.to-top {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 80;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.to-top.visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.to-top:hover { background: var(--accent-soft); }
+
+/* ---------- Responsief ---------- */
+
+@media (max-width: 1080px) {
+  .topnav a:nth-child(3),
+  .topnav a:nth-child(4) { display: none; }
+}
+
+@media (max-width: 980px) {
+  .layout {
+    display: block;
+    padding: 0 18px;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 61px;
+    left: 0;
+    bottom: 0;
+    z-index: 90;
+    width: min(86vw, 340px);
+    height: auto;
+    padding: 22px 18px 40px;
+    background: var(--paper-2);
+    border-right: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    transform: translateX(-105%);
+    transition: transform .24s ease;
+  }
+
+  body.nav-open .sidebar { transform: none; }
+
+  .nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 61px 0 0;
+    z-index: 85;
+    background: rgba(20, 22, 17, .32);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+  }
+
+  body.nav-open .nav-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .menu-button { display: inline-flex; }
+
+  .hero {
+    grid-template-columns: 1fr;
+    padding-top: 40px;
+  }
+
+  .phone-stage { min-height: 390px; max-width: 560px; margin: 0 auto; }
+
+  .glossary-controls { top: 61px; }
+}
+
+@media (max-width: 760px) {
+  body { font-size: 16px; }
+
+  .topbar-inner { padding: 9px 14px; gap: 10px; }
+  .topnav { display: none; }
+  .brand small { display: none; }
+  .theme-label { display: none; }
+  .icon-button { padding: 7px 10px; }
+
+  h1 { font-size: clamp(2.35rem, 11vw, 3.4rem); }
+  .lead { font-size: 1.02rem; }
+
+  .phone { width: 154px; }
+  .phone.one,
+  .phone.three { width: 124px; }
+  .phone-stage { min-height: 330px; }
+  .phone-caption { display: none; }
+
+  .grid-2,
+  .grid-3,
+  .lesson-grid,
+  .glossary-grid,
+  .exercise-grid,
+  .shots { grid-template-columns: 1fr; }
+
+  .arch-row.two { grid-template-columns: 1fr; }
+
+  .timeline { padding-left: 46px; }
+  .timeline::before { left: 18px; }
+  .step-num { left: -46px; width: 38px; height: 38px; font-size: 1rem; }
+
+  .layer:nth-child(2) { margin-left: 10px; }
+  .layer:nth-child(3) { margin-left: 20px; }
+
+  .tapflow li { flex-basis: 118px; }
+}
+
+@media (max-width: 520px) {
+  .layout { padding: 0 15px; }
+  section[id] { padding-top: 38px; }
+  .hero { padding-top: 32px; }
+  .phone.one { transform: rotate(-8deg) translate(10px, 16px); }
+  .phone.three { transform: rotate(8deg) translate(-10px, 20px); }
+  .phone-stage { min-height: 280px; }
+  .phone { width: 126px; }
+  .phone.one,
+  .phone.three { width: 96px; }
+
+  .card { padding: 18px; }
+  .step-card { padding: 16px; }
+  .codeblock pre { padding: 14px; font-size: .79rem; }
+  .idmap-grid { width: 156px; }
+  .footer-inner { padding-bottom: 60px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+/* ---------- Print ---------- */
+
+@media print {
+  .topbar,
+  .sidebar,
+  .nav-backdrop,
+  .to-top,
+  .scroll-progress,
+  .copy-btn,
+  .hero-actions { display: none !important; }
+
+  body { background: #fff; color: #000; font-size: 11pt; }
+  .layout { display: block; max-width: none; padding: 0; }
+  main { padding-bottom: 0; }
+  a { color: #000; text-decoration: underline; }
+  .codeblock { break-inside: avoid; box-shadow: none; }
+  .card, .step-card, .term, details.faq, .exercise { break-inside: avoid; box-shadow: none; }
+  .codeblock pre { white-space: pre-wrap; }
+}
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#inhoud">Naar de inhoud</a>
+<div class="scroll-progress" aria-hidden="true"><span id="scrollbar"></span></div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#top" aria-label="Kleuren codeboek, naar boven">
+      <span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="brand-text">Kleuren <small>Codeboek</small></span>
+    </a>
+
+    <nav class="topnav" aria-label="Snel naar">
+      <a href="#grote-plaat">Grote plaat</a>
+      <a href="#reis">Reis van een foto</a>
+      <a href="#bord">Het bord</a>
+      <a href="#woordenboek">Woordenboek</a>
+      <a href="https://github.com/simondewaal1980/kleurenpuzzle" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+
+    <div class="top-actions">
+      <button class="icon-button" id="theme-toggle" type="button" aria-pressed="false" aria-label="Schakel naar donker thema">
+        <span class="theme-icon" aria-hidden="true">◐</span>
+        <span class="theme-label">Donker</span>
+      </button>
+      <button class="icon-button menu-button" id="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">
+        <span aria-hidden="true">☰</span>
+        <span class="visually-hidden">Menu</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <nav class="toc" aria-label="Inhoudsopgave">
+      <p class="toc-title">Inhoud</p>
+      <ol class="toc-list">
+        <li><a href="#wat">Wat is Kleuren?</a></li>
+        <li><a href="#grote-plaat">De grote plaat</a></li>
+        <li><a href="#lezen">Zo lees je dit boek</a></li>
+        <li><a href="#kotlin">Kotlin in 10 minuten</a></li>
+        <li><a href="#reis">De reis van een foto</a>
+          <ol class="toc-sub">
+            <li><a href="#stap-1">1. Verkleinen</a></li>
+            <li><a href="#stap-3">3. Kleuren kiezen</a></li>
+            <li><a href="#stap-5">5. Vlakken vinden</a></li>
+            <li><a href="#stap-6">6. Contouren</a></li>
+          </ol>
+        </li>
+        <li><a href="#formaat">Het .kplate-formaat</a></li>
+        <li><a href="#bord">Het kleurbord</a></li>
+        <li><a href="#opslag">Waar blijft alles?</a></li>
+        <li><a href="#app-laag">De app-laag</a></li>
+        <li><a href="#content">Content maken</a></li>
+        <li><a href="#testen">Testen</a></li>
+        <li><a href="#woordenboek">Woordenboek</a></li>
+        <li><a href="#faq">Vragen</a></li>
+        <li><a href="#oefeningen">Oefeningen</a></li>
+        <li><a href="#waar-staat-wat">Waar staat wat?</a></li>
+        <li><a href="#verder">Verder lezen</a></li>
+      </ol>
+    </nav>
+    <div class="toc-meta">
+      <strong>Leestijd:</strong> ongeveer 45–90 minuten.<br>
+      <strong>Niveau:</strong> beginnen bij nul mag.<br>
+      <strong>Bijgewerkt:</strong> november 2026.
+    </div>
+  </aside>
+
+  <div class="nav-backdrop" id="nav-backdrop" aria-hidden="true"></div>
+
+  <main id="inhoud">
+    <section class="hero" id="top">
+      <div>
+        <p class="eyebrow">Het codeboek · in gewone taal</p>
+        <h1>Van foto naar <em>kleurplaat</em>.</h1>
+        <p class="lead">
+          Dit is de complete rondleiding door de code van <strong>Kleuren</strong>,
+          een rustige paint-by-numbers-app voor Android. Je leest hoe een foto
+          verandert in honderden genummerde vlakken, hoe het bord ze supersch snel
+          tekent en waar alle gegevens blijven. Geen voorkennis nodig.
+        </p>
+        <div class="hero-actions">
+          <a class="button" href="#grote-plaat">Begin bij de grote plaat</a>
+          <a class="button secondary" href="#reis">Volg een foto</a>
+        </div>
+        <ul class="hero-meta">
+          <li>10 landschappen</li>
+          <li>4 Gradle-modules</li>
+          <li>Alles lokaal op je toestel</li>
+          <li>Eén HTML-bestand</li>
+        </ul>
+      </div>
+
+      <div class="phone-stage" aria-label="Drie schermafbeeldingen van de app">
+        <div class="phone one">
+          <img src="screenshot-voltooid.jpg" alt="Een voltooide kleurplaat zonder nummers en lijnen" width="1080" height="2400">
+        </div>
+        <div class="phone two">
+          <img src="screenshot-bibliotheek.jpg" alt="De bibliotheek met landschappen en voortgang" width="1080" height="2400">
+        </div>
+        <div class="phone three">
+          <img src="screenshot-kleurbord.jpg" alt="Het kleurbord met genummerde vlakken en een palet" width="1080" height="2400">
+        </div>
+        <p class="phone-caption">De app in drie momenten: kiezen, kleuren, klaar.</p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="wat">
+      <div class="chapter">Hoofdstuk 1</div>
+      <h2>Wat is Kleuren?</h2>
+      <p class="lead-in">
+        Kleuren is een Android-app waarin je op je eigen tempo een landschap
+        inkleurt. Elk vlak heeft een nummer. Je kiest een kleur, tikt op een
+        vlak en de app doet de rest. Geen timer, geen levens, geen energie.
+      </p>
+
+      <div class="grid-3">
+        <article class="card">
+          <span class="card-number">1</span>
+          <h3>Kies een plaat</h3>
+          <p>
+            Er zijn tien Europese landschappen in drie packs. Of je kiest een
+            foto van je eigen telefoon. De app maakt daar een nieuwe kleurplaat
+            van.
+          </p>
+        </article>
+        <article class="card">
+          <span class="card-number">2</span>
+          <h3>Kies een kleur</h3>
+          <p>
+            Onderin het bord staat een palet. Bij elke kleur zie je hoeveel
+            vlakken er nog bij horen. Een hint-modus licht ze allemaal op.
+          </p>
+        </article>
+        <article class="card">
+          <span class="card-number">3</span>
+          <h3>Tik en ontspan</h3>
+          <p>
+            Tik op een vlak met het juiste nummer. Het vult zich met de kleur.
+            Klopt het niet? Dan krijg je een vriendelijke aanwijzing, geen straf.
+          </p>
+        </article>
+      </div>
+
+      <h3>Wat er allemaal in zit</h3>
+      <ul>
+        <li><strong>Tien landschappen</strong> in de packs <em>Alpen &amp; Meren</em>,
+          <em>Mediterraan</em> en <em>Noord &amp; West</em>. Alle bronfoto's zijn CC0.</li>
+        <li><strong>Eigen foto's</strong>: kiezen met de Android Photo Picker, op het
+          toestel omzetten en lokaal bewaren. Geen upload, geen opslagtoestemming.</li>
+        <li><strong>Vijf moeilijkheidsgraden</strong>, van grote rustige vlakken tot
+          veel kleine details.</li>
+        <li><strong>Een kleurbord</strong> met pinch-zoom, undo, hint, magisch vullen,
+          automatisch opslaan en delen als PNG.</li>
+        <li><strong>Een offline generator</strong> die precies dezelfde code gebruikt
+          als de app om de meegeleverde platen te maken.</li>
+      </ul>
+
+      <div class="callout plain">
+        <span class="label">Eerlijk is eerlijk</span>
+        <p>
+          Dit is een <strong>leerproject</strong>, geen afgeronde commerciële app.
+          De code is bewust rechttoe-rechtaan gehouden en de comments zijn in het
+          Nederlands. Op sommige plekken is gekozen voor eenvoud boven een
+          bibliotheek. Waar dat zo is, staat er in dit boek bij waarom.
+        </p>
+      </div>
+
+      <h3>De drie dingen die je moet onthouden</h3>
+      <div class="grid-3">
+        <article class="card">
+          <h3>1. De app rekent niet met kleuren, maar met vlakken</h3>
+          <p>
+            Een plaat is een lijst van vlakken. Elk vlak heeft een vorm, een
+            kleur en een nummer. De app hoeft alleen te weten welk vlak je raakt.
+          </p>
+        </article>
+        <article class="card">
+          <h3>2. De moeilijke berekeningen staan los van Android</h3>
+          <p>
+            <code>:format</code> en <code>:pipeline</code> zijn pure Kotlin.
+            Daardoor kun je ze op je laptop testen en gebruikt de generator
+            dezelfde code als de telefoon.
+          </p>
+        </article>
+        <article class="card">
+          <h3>3. Het bord is een slimme tekenfilm</h3>
+          <p>
+            De ingekleurde vlakken en de lijnen worden één keer naar twee
+            bitmaps getekend. Elk frame toont alleen die twee plaatjes plus de
+            nummers. Dat houdt het snel.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="grote-plaat">
+      <div class="chapter">Hoofdstuk 2</div>
+      <h2>De grote plaat</h2>
+      <p class="lead-in">
+        Voordat je in de code duikt, is het handig om te weten welke blokken
+        er zijn. Kleuren bestaat uit vier Gradle-modules. Denk aan een module
+        als een lade met code die je apart kunt bouwen en testen.
+      </p>
+
+      <div class="arch" aria-label="Architectuurdiagram van de modules">
+        <div class="arch-row">
+          <div class="arch-card android">
+            <strong>:app — de Android-app</strong>
+            <span>Compose-schermen, ViewModels, repositories, het bord en de opslag. Dit is de enige module die Android kent.</span>
+          </div>
+        </div>
+        <div class="arch-connector down">gebruikt</div>
+        <div class="arch-row two">
+          <div class="arch-card pure">
+            <strong>:format — het bestandsformaat</strong>
+            <span>Leest en schrijft <code>.kplate</code>-bestanden. Pure Kotlin, geen Android.</span>
+          </div>
+          <div class="arch-card pure">
+            <strong>:pipeline — foto naar plaat</strong>
+            <span>Verkleinen, kleuren kiezen, vlakken vinden, contouren tekenen. Pure Kotlin, geen Android.</span>
+          </div>
+        </div>
+        <div class="arch-connector down">dezelfde code</div>
+        <div class="arch-row">
+          <div class="arch-card">
+            <strong>:tools:generator — de desktop-CLI</strong>
+            <span>Draait op je laptop, leest <code>content/content.json</code> en schrijft de meegeleverde platen, previews en het manifest.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout tip">
+        <span class="label">De gouden regel</span>
+        <p>
+          <strong><code>:format</code> en <code>:pipeline</code> weten niets van
+          Android.</strong> Ze hebben geen <code>Context</code>, geen
+          <code>Bitmap</code> en geen scherm nodig. Daardoor zijn ze snel te
+          testen en gebruikt de generator exact dezelfde code als de app. Dat is
+          de belangrijkste architectuurkeuze van dit project.
+        </p>
+      </div>
+
+      <h3>De mapstructuur in één oogopslag</h3>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">projectstructuur</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code>kleuren/
+├── app/                  De Android-app (Compose, ViewModels, repos)
+│   ├── src/main/assets/  manifest.json, .kplate-bestanden, previews, bronfoto's
+│   └── src/main/java/nl/kleuren/app/
+│       ├── data/         opslag, manifest, instellingen, generator
+│       └── ui/           bibliotheek, bord, foto importeren, instellingen
+├── format/               .kplate encoder/decoder (pure Kotlin + tests)
+├── pipeline/             foto → kleurplaat (pure Kotlin + tests)
+├── tools/generator/      desktop-CLI om content te maken
+├── content/              bronfoto's, content.json, CREDITS.md
+└── docs/                 screenshots, FORMAT.md en dit codeboek</code></pre>
+      </div>
+
+      <h3>De reis van de gegevens</h3>
+      <p>
+        Alles begint bij pixels en eindigt bij een bestand dat de app kan
+        openen. Onderweg wordt de foto steeds een beetje meer "plaat":
+      </p>
+      <ol class="flow">
+        <li>Foto</li>
+        <li>Raster</li>
+        <li>Kleurlabels</li>
+        <li>Vlakken</li>
+        <li>Contouren</li>
+        <li><code>Plate</code></li>
+        <li><code>.kplate</code></li>
+        <li>Kleurbord</li>
+      </ol>
+
+      <h3>Waarom deze indeling slim is</h3>
+      <div class="grid-3">
+        <article class="card">
+          <h3>Testen zonder telefoon</h3>
+          <p>
+            <code>./gradlew :format:test :pipeline:test</code> draait op je
+            laptop. Geen emulator, geen Android SDK-gedoe. Je weet binnen een
+            paar seconden of de kern klopt.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Één waarheid</h3>
+          <p>
+            De app en de generator roepen dezelfde <code>PhotoToPlate.convert</code>
+            aan. Een landschap en een eigen foto krijgen daardoor dezelfde
+            soort moeilijkheid en dezelfde soort vlakken.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Vervangbare lagen</h3>
+          <p>
+            De UI weet niet hoe een <code>.kplate</code> in elkaar zit. De
+            pipeline weet niet hoe een scherm eruitziet. Daardoor kun je een
+            laag vervangen zonder de andere te slopen.
+          </p>
+        </article>
+      </div>
+
+      <div class="analogy">
+        <p>
+          Zie de app als een restaurant. De <strong>keuken</strong> (pipeline)
+          maakt het eten. De <strong>voorraadkast</strong> (format) bewaart de
+          recepten en ingrediënten op een vaste manier. De <strong>ober</strong>
+          (UI) brengt het naar je tafel. De generator is de
+          <strong>centrale productiekeuken</strong> die dezelfde recepten
+          gebruikt, maar dan voor alle tafels tegelijk.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="lezen">
+      <div class="chapter">Hoofdstuk 3</div>
+      <h2>Zo lees je dit boek</h2>
+      <p class="lead-in">
+        Je hoeft niet van voor naar achter te lezen. Kies de route die bij je
+        past. Onderweg kom je kaders tegen met een vast ritme: eerst in gewone
+        taal, dan de code, dan wat je moet onthouden.
+      </p>
+
+      <div class="grid-3">
+        <article class="card">
+          <h3>Route A · Ik begin bij nul</h3>
+          <p>
+            Lees eerst <a href="#kotlin">Kotlin in 10 minuten</a>, dan
+            <a href="#reis">de reis van een foto</a> en daarna
+            <a href="#bord">het bord</a>. Sla de diepe codefragmenten gerust
+            eerst over.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Route B · Ik ken Kotlin al</h3>
+          <p>
+            Begin bij <a href="#grote-plaat">de grote plaat</a>, schakel door
+            naar <a href="#formaat">het formaat</a> en lees daarna
+            <a href="#bord">de tekenmotor</a>. Pak de code erbij.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Route C · Ik wil iets aanpassen</h3>
+          <p>
+            Ga direct naar <a href="#bord">het bord</a>,
+            <a href="#app-laag">de app-laag</a> of
+            <a href="#oefeningen">de oefeningen</a>. Daar staat per taak welke
+            bestanden je nodig hebt.
+          </p>
+        </article>
+      </div>
+
+      <h3>De kaders in dit boek</h3>
+      <div class="grid-2">
+        <article class="card">
+          <h3>In gewone taal</h3>
+          <p>
+            Een uitleg zonder jargon, vaak met een vergelijking. Lees dit eerst
+            als je het idee nog niet helder hebt.
+          </p>
+        </article>
+        <article class="card">
+          <h3>In de code</h3>
+          <p>
+            Een kort fragment uit het echte project, met het bestand erbij.
+            Je hoeft niet elk teken te begrijpen; kijk naar de vorm.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Let op</h3>
+          <p>
+            Een plek waar iets verrassends gebeurt, waar een beperking zit of
+            waar je een veelgemaakte fout kunt maken.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Probeer dit</h3>
+          <p>
+            Een kleine oefening of controle. Je leert het meest door iets te
+            veranderen en te kijken wat er gebeurt.
+          </p>
+        </article>
+      </div>
+
+      <h3>Over de namen in de code</h3>
+      <p>
+        De comments en de gebruikersinterface zijn Nederlands, maar veel
+        klassennamen zijn Engels: <code>Plate</code>, <code>Region</code>,
+        <code>BoardRenderer</code>. Dat is geen willekeur. Engelse namen zijn
+        gangbaar in de Android-wereld en maken het makkelijker om later een
+        internationale bijdrage te doen. In dit boek vertalen we ze steeds naar
+        gewoon Nederlands.
+      </p>
+
+      <div class="callout tip">
+        <span class="label">Tip</span>
+        <p>
+          Open de code ernaast. Alle paden in dit boek zijn echte bestanden in de
+          repository. Klik op een bestandsnaam in
+          <a href="#waar-staat-wat">Waar staat wat?</a> om hem op GitHub te
+          openen.
+        </p>
+      </div>
+
+      <div class="callout plain">
+        <span class="label">Een geruststelling</span>
+        <p>
+          Je hoeft niet alle 4.000 regels te lezen om de app te snappen. De
+          kern past in drie ideeën: <strong>een plaat is een lijst vlakken</strong>,
+          <strong>een foto wordt met wiskunde platgeslagen tot die vlakken</strong>
+          en <strong>het bord tekent die vlakken op twee bitmaps</strong>. De rest
+          is invulling.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="kotlin">
+      <div class="chapter">Hoofdstuk 4</div>
+      <h2>Kotlin in 10 minuten</h2>
+      <p class="lead-in">
+        Dit is geen complete Kotlin-cursus. Het is de minimale taalgids om de
+        code van Kleuren te kunnen lezen. Ken je al een andere programmeertaal,
+        dan zul je veel herkennen.
+      </p>
+
+      <div class="lesson-grid">
+        <article class="lesson">
+          <h3>1. <code>val</code> en <code>var</code></h3>
+          <p>Met <code>val</code> maak je iets dat niet meer verandert. Met <code>var</code> maak je iets dat mag veranderen.</p>
+          <div class="codeblock"><div class="codeblock-bar"><span class="file">Kotlin</span></div><pre><code><span class="kw">val</span> appNaam = <span class="str">"Kleuren"</span>   <span class="comment">// blijft zo</span>
+<span class="kw">var</span> teller = <span class="num">0</span>            <span class="comment">// mag veranderen</span>
+teller += <span class="num">1</span></code></pre></div>
+        </article>
+
+        <article class="lesson">
+          <h3>2. Functies</h3>
+          <p>Een functie is een blokje code met een naam. Je geeft er waarden in en krijgt er iets terug.</p>
+          <div class="codeblock"><div class="codeblock-bar"><span class="file">Kotlin</span></div><pre><code><span class="kw">fun</span> oppervlakte(breedte: Int, hoogte: Int): Int {
+    <span class="kw">return</span> breedte * hoogte
+}</code></pre></div>
+        </article>
+
+        <article class="lesson">
+          <h3>3. Data classes</h3>
+          <p>Een <code>data class</code> is een doosje met benoemde velden. Kotlin maakt zelf <code>equals</code>, <code>hashCode</code> en een leesbare <code>toString</code>.</p>
+          <div class="codeblock"><div class="codeblock-bar"><span class="file">SettingsRepository.kt</span></div><pre><code><span class="kw">data class</span> AppSettings(
+    <span class="kw">val</span> showNumbers: Boolean = <span class="kw">true</span>,
+    <span class="kw">val</span> themeMode: ThemeMode = ThemeMode.SYSTEM,
+)</code></pre></div>
+        </article>
+
+        <article class="lesson">
+          <h3>4. <code>when</code></h3>
+          <p>Een nette manier om te kiezen tussen mogelijkheden. Vergelijk het met een schakelaar of een menu.</p>
+          <div class="codeblock"><div class="codeblock-bar"><span class="file">Kotlin</span></div><pre><code><span class="kw">val</span> label = <span class="kw">when</span> (stage) {
+    ConversionStage.PREPARING -&gt; <span class="str">"Foto voorbereiden…"</span>
+    ConversionStage.QUANTIZING -&gt; <span class="str">"Kleuren kiezen…"</span>
+    <span class="kw">else</span> -&gt; <span class="str">"Bezig…"</span>
+}</code></pre></div>
+        </article>
+
+        <article class="lesson">
+          <h3>5. Null-veiligheid</h3>
+          <p>Een waarde kan <code>null</code> zijn: "niets". Kotlin dwingt je om daarover na te denken. <code>?.</code> doet iets alleen als er iets is. <code>?:</code> geeft een fallback.</p>
+          <div class="codeblock"><div class="codeblock-bar"><span class="file">Kotlin</span></div><pre><code><span class="kw">val</span> regio = plate.regionById(id) ?: <span class="kw">return</span>
+<span class="kw">val</span> kleur = plate.palette.getOrNull(index)</code></pre></div>
+        </article>
+
+        <article class="lesson">
+          <h3>6. Lijsten, sets en maps</h3>
+          <p>Een <code>List</code> houdt volgorde bij. Een <code>Set</code> bevat elk ding maar één keer. Een <code>Map</code> koppelt een sleutel aan een waarde.</p>
+          <div class="codeblock"><div class="codeblock-bar"><span class="file">Kotlin</span></div><pre><code><span class="kw">val</span> gevuld: Set&lt;Int&gt; = setOf(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>)
+<span class="kw">val</span> aantal = gevuld.count { plate.regionById(it) != <span class="kw">null</span> }
+<span class="kw">val</span> ids = plate.regions.map { it.id }</code></pre></div>
+        </article>
+
+        <article class="lesson">
+          <h3>7. Lambdas</h3>
+          <p>Een lambda is een klein functietje dat je ergens aan meegeeft. <code>{ }</code> betekent "dit moet je doen". Vaak gebruik je <code>it</code> voor het ene argument.</p>
+          <div class="codeblock"><div class="codeblock-bar"><span class="file">Kotlin</span></div><pre><code><span class="kw">val</span> blauweVlakken = plate.regions
+    .filter { it.colorIndex == gekozenKleur }
+    .map { it.id }</code></pre></div>
+        </article>
+
+        <article class="lesson">
+          <h3>8. Coroutines</h3>
+          <p>Zwaar werk hoort niet op de main-thread: dan bevriest het scherm. Een coroutine is een achtergrondtaak die netjes kan wachten en stoppen.</p>
+          <div class="codeblock"><div class="codeblock-bar"><span class="file">Kotlin</span></div><pre><code>viewModelScope.launch {
+    <span class="kw">val</span> plaat = withContext(Dispatchers.Default) {
+        PhotoToPlate.convert(width, height, pixels, options)
+    }
+    <span class="comment">// hier weer op de main-thread</span>
+}</code></pre></div>
+        </article>
+
+        <article class="lesson">
+          <h3>9. StateFlow</h3>
+          <p>Een <code>StateFlow</code> is een bord met de huidige toestand. De UI hangt eraan en krijgt automatisch een seintje als er iets verandert.</p>
+          <div class="codeblock"><div class="codeblock-bar"><span class="file">BoardViewModel.kt</span></div><pre><code><span class="kw">private val</span> _state = MutableStateFlow(BoardUiState())
+<span class="kw">val</span> state: StateFlow&lt;BoardUiState&gt; = _state.asStateFlow()</code></pre></div>
+        </article>
+
+        <article class="lesson">
+          <h3>10. Compose</h3>
+          <p>Een <code>@Composable</code> is een functie die een stukje scherm beschrijft. Als de state verandert, maakt Compose dat stukje opnieuw.</p>
+          <div class="codeblock"><div class="codeblock-bar"><span class="file">Kotlin</span></div><pre><code><span class="kw">@Composable</span>
+<span class="kw">fun</span> Teller() {
+    <span class="kw">var</span> aantal <span class="kw">by</span> remember { mutableStateOf(<span class="num">0</span>) }
+    Button(onClick = { aantal++ }) {
+        Text(<span class="str">"Je klikte $aantal keer"</span>)
+    }
+}</code></pre></div>
+        </article>
+      </div>
+
+      <div class="analogy">
+        <p>
+          Kotlin is de taal, Compose is de manier waarop je schermen beschrijft,
+          en Gradle is de bouwvakker die alles in de juiste volgorde compileert.
+          Je hoeft geen monteur te zijn om te snappen hoe een auto rijdt, maar
+          het helpt om te weten waar het stuur zit.
+        </p>
+      </div>
+
+      <div class="callout warn">
+        <span class="label">Let op</span>
+        <p>
+          Je ziet in de code soms <code>!!</code>. Dat betekent: "ik weet zeker
+          dat dit niet null is". Als dat toch zo is, crasht de app. In Kleuren
+          wordt <code>!!</code> spaarzaam gebruikt, meestal op plekken waar de
+          state net daarvoor is gecontroleerd. Voel je je onzeker? Vervang het
+          liever door een nette <code>?:</code>-controle.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="reis">
+      <div class="chapter">Hoofdstuk 5</div>
+      <h2>De reis van een foto</h2>
+      <p class="lead-in">
+        Dit is het hart van het project. De pipeline krijgt een foto en maakt
+        daar een <code>Plate</code> van: een lijst vlakken met kleuren,
+        nummers, contouren en een id-map. Dezelfde stappen gelden voor de tien
+        landschappen en voor je eigen foto.
+      </p>
+
+      <ol class="flow">
+        <li>Foto</li>
+        <li>Kleiner maken</li>
+        <li>Ruis dempen</li>
+        <li>Kleuren kiezen</li>
+        <li>Vlakken vinden</li>
+        <li>Contouren</li>
+        <li>Plaat bouwen</li>
+      </ol>
+
+      <div class="callout">
+        <span class="label">In gewone taal</span>
+        <p>
+          Stel je voor dat je een foto hebt van een bergmeer. Je wilt geen
+          miljoen verschillende kleuren, maar een handvol kleuren die je met
+          stiften kunt natekenen. De pipeline doet niets anders dan de foto
+          versimpelen tot grote, aanraakbare vlakken. Daarna trekt hij een
+          lijntje om elk vlak en zet hij er een nummer in.
+        </p>
+      </div>
+
+      <div class="timeline">
+        <article class="step" id="stap-0">
+          <div class="step-num">0</div>
+          <div class="step-card">
+            <span class="step-tag">Vooraf · de app</span>
+            <h3>Een foto kiezen</h3>
+            <p>
+              De app opent de <strong>Android Photo Picker</strong>. Dat is de
+              fotokiezer van het systeem. De app krijgt alleen toegang tot de
+              foto die jij aanwijst. Daardoor zijn er geen opslag- of
+              cameratoestemmingen nodig.
+            </p>
+            <p>
+              De gekozen foto wordt verkleind naar maximaal 2048 pixels en als
+              <code>Bitmap</code> in het geheugen gezet. Daarna begint de
+              eigenlijke pipeline.
+            </p>
+            <p class="small">Bestanden: <code>ui/photo/PhotoImportScreen.kt</code>, <code>ui/photo/PhotoImportViewModel.kt</code></p>
+          </div>
+        </article>
+
+        <article class="step" id="stap-1">
+          <div class="step-num">1</div>
+          <div class="step-card">
+            <span class="step-tag">Pipeline · voorbereiden</span>
+            <h3>Verkleinen naar maximaal 1200 pixels</h3>
+            <p>
+              Een foto van 12 megapixel heeft 12 miljoen pixels. Voor een
+              kleurplaat op een telefoon is dat veel te veel werk. De lange
+              zijde wordt teruggebracht naar maximaal <strong>1200 pixels</strong>.
+              De verhouding blijft hetzelfde.
+            </p>
+            <p>
+              Dat gebeurt met een <strong>box filter</strong>: elk nieuw pixel
+              is het gemiddelde van een blokje oude pixels. Dat is simpel en
+              voorkomt rafelige randen beter dan "pak elke zoveelste pixel".
+            </p>
+            <div class="codeblock">
+              <div class="codeblock-bar"><span class="file">pipeline/ImageOps.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+              <pre><code><span class="kw">fun</span> downscale(source: Raster, maxSide: Int): Raster {
+    <span class="kw">val</span> longest = max(source.width, source.height)
+    <span class="kw">if</span> (longest &lt;= maxSide) <span class="kw">return</span> source
+
+    <span class="kw">val</span> scale = maxSide.toDouble() / longest
+    <span class="comment">// elk doel-pixel = gemiddelde van een blok bronpixels</span>
+    ...
+}</code></pre>
+            </div>
+            <div class="callout tip">
+              <span class="label">Waarom 1200?</span>
+              <p>
+                1200 pixels langs de lange zijde is scherp genoeg voor een
+                telefoonscherm, maar houdt het geheugen en de rekentijd
+                behapbaar. De bitmaplagen van het bord zijn maximaal 1800 pixels;
+                bij diep inzoomen worden ze dus iets zachter. Dat is een bewuste
+                ruil.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article class="step" id="stap-2">
+          <div class="step-num">2</div>
+          <div class="step-card">
+            <span class="step-tag">Pipeline · smoothing</span>
+            <h3>Ruis dempen, randen bewaren</h3>
+            <p>
+              Foto's bevatten ruis, JPEG-artefacten en oneffenheden. Als je die
+              allemaal meeneemt, krijg je honderden spikkelvlakjes. De app kijkt
+              daarom naar de 3×3 buren van elk pixel. Alleen buren die qua kleur
+              sterk lijken op het midden tellen mee in het gemiddelde.
+            </p>
+            <p>
+              Het resultaat: zachte vlakken, maar scherpe overgangen bij bergen,
+              bomen en gebouwen. Dit is een vereenvoudigde bilaterale filter.
+            </p>
+            <div class="codeblock">
+              <div class="codeblock-bar"><span class="file">pipeline/PhotoToPlate.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+              <pre><code>raster = ImageOps.downscale(raster, options.maxSide)
+raster = ImageOps.smoothEdges(raster)</code></pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="step" id="stap-3">
+          <div class="step-num">3</div>
+          <div class="step-card">
+            <span class="step-tag">Pipeline · kleuren</span>
+            <h3>Kleuren kiezen met k-means</h3>
+            <p>
+              De foto heeft nog duizenden kleuren. De app moet er 12 tot 20
+              overhouden. Dat doet hij met <strong>k-means</strong>: een
+              algoritme dat pixels in groepjes met vergelijkbare kleuren
+              verdeelt.
+            </p>
+            <div class="analogy">
+              <p>
+                Stel je een tafel vol potloden voor. Je wilt ze opruimen in
+                veertien potjes. Je kiest veertien beginplekken, legt elk
+                potlood bij de dichtstbijzijnde plek en schuift daarna elk potje
+                naar het gemiddelde van zijn potloden. Dat herhaal je een paar
+                keer. Dan heb je veertien kleuren die de foto goed samenvatten.
+              </p>
+            </div>
+            <p>
+              De app doet dit eerst op een steekproef van maximaal 48.000
+              pixels (snel), en daarna één keer voor alle pixels (nauwkeurig).
+              Bijna-identieke kleuren worden samengevoegd met een
+              <strong>Delta E</strong>-maat: twee kleuren die voor het oog
+              vrijwel gelijk zijn, zijn funest voor een kleurplaat.
+            </p>
+            <div class="codeblock">
+              <div class="codeblock-bar"><span class="file">pipeline/KMeans.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+              <pre><code><span class="comment">// Elk pixel hoort bij het dichtstbijzijnde kleurcentrum.</span>
+<span class="kw">for</span> (c <span class="kw">in</span> centers.indices) {
+    <span class="kw">val</span> d = ColorMath.distanceSq(color, centers[c]).toLong()
+    <span class="kw">if</span> (d &lt; bestDistance) {
+        bestDistance = d
+        best = c
+    }
+}</code></pre>
+            </div>
+            <p class="small">
+              De kleuren worden daarna gesorteerd van veel voorkomend naar
+              weinig voorkomend. Kleur 1 in het palet is daardoor meestal de
+              grote achtergrondkleur.
+            </p>
+          </div>
+        </article>
+
+        <article class="step" id="stap-4">
+          <div class="step-num">4</div>
+          <div class="step-card">
+            <span class="step-tag">Pipeline · labels</span>
+            <h3>De labels gladstrijken</h3>
+            <p>
+              Na k-means heeft elk pixel een <strong>label</strong>: een nummer
+              dat zegt bij welke paletkleur het hoort. Maar er kunnen losse
+              spikkels en kartelige randen overblijven. Een 3×3 mode-filter
+              vervangt elk label door het meest voorkomende label in de buurt.
+            </p>
+            <p>
+              Bij een gelijke stand wint het middenpixel, zodat een bestaande
+              rand niet zomaar verschuift. Het resultaat zijn rustiger,
+              aaneengesloten vlakken.
+            </p>
+            <div class="codeblock">
+              <div class="codeblock-bar"><span class="file">pipeline/PhotoToPlate.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+              <pre><code><span class="kw">val</span> smoothedLabels = ImageOps.smoothLabels(
+    labels = quantized.labels,
+    width = quantized.width,
+    height = quantized.height,
+    paletteSize = quantized.palette.size,
+)</code></pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="step" id="stap-5">
+          <div class="step-num">5</div>
+          <div class="step-card">
+            <span class="step-tag">Pipeline · vlakken</span>
+            <h3>Vlakken vinden met connected components</h3>
+            <p>
+              Nu gaat de app op zoek naar stukken die bij elkaar horen. Pixels
+              met dezelfde kleur die boven, onder, links of rechts aan elkaar
+              grenzen, vormen samen één <strong>connected component</strong>.
+              Dat is één inkleurbaar vlak.
+            </p>
+            <p>
+              Dat gebeurt met een <strong>flood-fill</strong>: begin bij een
+              pixel, loop alle buren af, en daarna de buren van de buren. Een
+              iteratieve wachtrij voorkomt een stack overflow bij grote
+              achtergronden.
+            </p>
+            <div class="codeblock">
+              <div class="codeblock-bar"><span class="file">pipeline/PhotoToPlate.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+              <pre><code><span class="kw">val</span> extraction = RegionExtractor.extract(
+    quantized = cleaned,
+    options = options,
+    onProgress = { fraction -&gt; ... },
+)</code></pre>
+            </div>
+            <h4>Twee opruimacties</h4>
+            <ul>
+              <li>
+                <strong>Te kleine vlakken</strong> worden samengevoegd met de
+                buur met de langste gedeelde rand. Een vlak van 3 pixels is met
+                een vinger niet te raken.
+              </li>
+              <li>
+                <strong>Te dunne strepen</strong> (een rand van 1 à 2 pixels)
+                worden ook samengevoegd. Anders kun je ze nooit nauwkeurig
+                aantikken.
+              </li>
+            </ul>
+            <p>
+              Als er na al dat opruimen nog meer dan 800 vlakken over zijn,
+              smelt de extractor de kleinste vlakken samen tot hij binnen de
+              bandbreedte zit. Zo blijft een plaat behapbaar.
+            </p>
+            <div class="codeblock">
+              <div class="codeblock-bar"><span class="file">pipeline/RegionExtractor.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+              <pre><code><span class="kw">val</span> minimumArea =
+    max(<span class="num">16</span>, (pixelCount * options.minRegionFraction).roundToInt())
+graph.mergeSmallRegions(minimumArea)
+graph.mergeDownTo(options.targetMaxRegions)</code></pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="step" id="stap-6">
+          <div class="step-num">6</div>
+          <div class="step-card">
+            <span class="step-tag">Pipeline · contouren</span>
+            <h3>Met een potlood om het vlak lopen</h3>
+            <p>
+              Elk vlak is nog een verzameling pixels. De app loopt met een
+              denkbeeldig potlood langs de buitenrand, met de gevulde pixels aan
+              de rechterkant. Bij elk roosterpunt probeert hij eerst rechtsaf,
+              dan rechtdoor en dan linksaf. Zo krijg je precies de
+              <strong>buitencontour</strong>, ook bij een vorm met inhammen.
+            </p>
+            <p>
+              Die contour bestaat uit honderden kleine "trapjes". Met het
+              algoritme van <strong>Douglas–Peucker</strong> blijven alleen de
+              punten over die echt nodig zijn om de vorm binnen een paar pixels
+              te benaderen.
+            </p>
+            <div class="codeblock">
+              <div class="codeblock-bar"><span class="file">pipeline/RegionExtractor.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+              <pre><code><span class="kw">val</span> rawContour = ContourTracer.traceOuterContour(...)
+<span class="kw">val</span> simplified = ContourSimplifier.simplifyClosed(
+    rawContour,
+    options.simplifyEpsilon,
+)</code></pre>
+            </div>
+            <div class="callout plain">
+              <span class="label">Gaten</span>
+              <p>
+                Een vlak kan een gat hebben, bijvoorbeeld een meer in een berg.
+                De tracer negeert dat gat. Dat is geen bug: de vlakken worden
+                straks van groot naar klein getekend, zodat het kleine
+                meervlak bovenop het grote bergvlak komt. De tekenvolgorde lost
+                het gat op.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article class="step" id="stap-7">
+          <div class="step-num">7</div>
+          <div class="step-card">
+            <span class="step-tag">Pipeline · bouwen</span>
+            <h3>De plaat in elkaar zetten</h3>
+            <p>
+              Nu worden de vlakken gesorteerd van groot naar klein. Elk vlak
+              krijgt een uniek id, een kleurindex, een vectorpad, een
+              zwaartepunt (waar het nummer komt) en een oppervlakte.
+            </p>
+            <p>
+              Daarna maakt de pipeline de <strong>id-map</strong>: een raster
+              waarin elk pixel zegt welk vlak daar ligt. Dit is de kaart waarmee
+              het bord later in één opzoeking weet welk vlak je hebt aangetikt.
+            </p>
+            <div class="codeblock">
+              <div class="codeblock-bar"><span class="file">pipeline/PhotoToPlate.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+              <pre><code><span class="kw">val</span> plate = Plate(
+    width = extraction.width,
+    height = extraction.height,
+    palette = quantized.palette,
+    regions = regions,
+    idMap = extraction.idMap,
+)</code></pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="step" id="stap-8">
+          <div class="step-num">8</div>
+          <div class="step-card">
+            <span class="step-tag">Pipeline · verpakken</span>
+            <h3>Verpakken in een <code>.kplate</code>-bestand</h3>
+            <p>
+              De app voegt nog een kleine preview-JPEG toe en schrijft alles
+              naar één compact binair bestand. Dat bestand gaat naar de opslag
+              (bij een eigen foto) of naar de assets (bij de generator).
+            </p>
+            <p>
+              De generator doet daarna nog iets extra's: hij schrijft een
+              <code>manifest.json</code> met titels, credits en het aantal
+              vlakken, plus de fotocredits.
+            </p>
+            <div class="codeblock">
+              <div class="codeblock-bar"><span class="file">format/PlateCodec.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+              <pre><code>PlateCodec.write(plate.withPreviewJpeg(preview), file)</code></pre>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <h3>De hele pipeline is één functie</h3>
+      <p>
+        Alle stappen worden aangestuurd vanuit <code>PhotoToPlate.convert</code>.
+        Dat is expres één leesbare volgorde. De app en de generator hoeven
+        alleen deze functie aan te roepen.
+      </p>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">pipeline/PhotoToPlate.kt — vereenvoudigd</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code><span class="kw">var</span> raster = Raster(width, height, argb)
+raster = ImageOps.downscale(raster, options.maxSide)
+raster = ImageOps.smoothEdges(raster)
+
+<span class="kw">val</span> quantized = KMeans.quantize(raster, options.colorCount, seed) { ... }
+<span class="kw">val</span> labels = ImageOps.smoothLabels(quantized.labels, ...)
+<span class="kw">val</span> extraction = RegionExtractor.extract(cleaned, options) { ... }
+
+<span class="kw">return</span> Plate(
+    width = extraction.width,
+    height = extraction.height,
+    palette = quantized.palette,
+    regions = regions,
+    idMap = extraction.idMap,
+)</code></pre>
+      </div>
+
+      <h3>Wat kan er misgaan?</h3>
+      <div class="grid-2">
+        <article class="card">
+          <h3>Te veel vlakken</h3>
+          <p>
+            Bij een drukke foto kunnen er honderden kleine vlakjes ontstaan.
+            De extractor smelt de kleinste samen tot maximaal 800. De app
+            probeert het bij sommige niveaus ook opnieuw met minder kleuren.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Te weinig vlakken</h3>
+          <p>
+            Een foto met grote egale luchten kan onder de streefband zakken.
+            Dat is niet erg: grote vlakken zijn juist rustig. De generator
+            waarschuwt, de app accepteert het.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Een foto die niet te lezen is</h3>
+          <p>
+            De app vangt fouten af en toont "De foto kon niet worden gelezen".
+            Ze crasht niet en laat geen half bestand achter.
+          </p>
+        </article>
+        <article class="card">
+          <h3>De gebruiker annuleert</h3>
+          <p>
+            De pipeline geeft via een callback terug of hij door mag gaan.
+            Annuleren gooit een <code>ConversionCancelledException</code> en
+            ruimt netjes op.
+          </p>
+        </article>
+      </div>
+
+      <div class="callout tip">
+        <span class="label">Probeer dit</span>
+        <p>
+          Open <code>pipeline/src/main/kotlin/nl/kleuren/pipeline/PhotoToPlate.kt</code>
+          en zoek de zes <code>report(...)</code>-regels. Dat zijn precies de
+          momenten waarop de app de voortgangsbalk bijwerkt. Vergelijk ze met de
+          fases in <code>ConversionStage</code>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="formaat">
+      <div class="chapter">Hoofdstuk 6</div>
+      <h2>Het <code>.kplate</code>-formaat</h2>
+      <p class="lead-in">
+        Een kleurplaat wordt bewaard als één binair bestand met de extensie
+        <code>.kplate</code>. Je kunt het niet met een tekstverwerker openen,
+        maar het is wel heel compact. Een plaat is ongeveer 150–250 KB.
+      </p>
+
+      <div class="analogy">
+        <p>
+          Zie het bestand als een verzegelde envelop. Aan de buitenkant staat
+          precies hoe groot de inhoud is en welke versie je in handen hebt. Pas
+          als de postbode de zegel controleert, maakt hij de envelop open. Zo
+          weet de app meteen of het bestand klopt voordat ze aan de inhoud
+          begint.
+        </p>
+      </div>
+
+      <h3>De buitenkant: de header</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Bytes</th><th>Wat staat er?</th><th>Waarom?</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="num">4</td><td>De letters <code>KPLT</code></td><td>Zo herkent de app het bestandstype.</td></tr>
+            <tr><td class="num">1</td><td>Formaatversie, nu <code>1</code></td><td>Een toekomstige versie kan anders zijn.</td></tr>
+            <tr><td class="num">1</td><td>Gereserveerd</td><td>Ruimte voor later, nu altijd 0.</td></tr>
+            <tr><td class="num">4</td><td>Lengte van de uitgepakte inhoud</td><td>Beveiliging tegen kapotte of kwaadaardige bestanden.</td></tr>
+            <tr><td class="num">rest</td><td>De inhoud, gecomprimeerd met zlib</td><td>Veel kleiner, met een checksum tegen beschadiging.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>De binnenkant: de payload</h3>
+      <p>
+        Als je de envelop opent, krijg je een vaste volgorde van gegevens. De
+        decoder leest ze van boven naar beneden:
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Deel</th><th>Wat het is</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Preview-JPEG</td><td>Een kleine thumbnail voor de bibliotheek.</td></tr>
+            <tr><td>Palet</td><td>12–20 kleuren, elk als één ARGB-getal.</td></tr>
+            <tr><td>Afmetingen</td><td>Breedte en hoogte van de plaat en van de id-map.</td></tr>
+            <tr><td>Vlakken</td><td>Per vlak: id, kleurindex, punten van het pad, zwaartepunt en oppervlakte.</td></tr>
+            <tr><td>Id-map</td><td>Per pixel welk vlak daar ligt. Twee bytes per pixel.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>De id-map in beeld</h3>
+      <p>
+        De id-map is een kleine landkaart van de plaat. Hieronder zie je een
+        stukje van 6 bij 6 pixels. Elk cijfer is een vlak-id. Stel dat je op de
+        gemarkeerde plek tikt: de app leest daar <strong>4</strong>, zoekt vlak 4
+        op en ziet welke kleur daarbij hoort.
+      </p>
+
+      <div class="idmap-demo">
+        <div class="idmap-grid" aria-label="Voorbeeld van een id-map met vlak-id's">
+          <span class="c1">1</span><span class="c1">1</span><span class="c1">1</span><span class="c2">2</span><span class="c2">2</span><span class="c2">2</span>
+          <span class="c1">1</span><span class="c1">1</span><span class="c1">1</span><span class="c2">2</span><span class="c2">2</span><span class="c2">2</span>
+          <span class="c1">1</span><span class="c1">1</span><span class="c4">4</span><span class="c4">4</span><span class="c2">2</span><span class="c2">2</span>
+          <span class="c3">3</span><span class="c3">3</span><span class="c4">4</span><span class="c4 target">4</span><span class="c5">5</span><span class="c5">5</span>
+          <span class="c3">3</span><span class="c3">3</span><span class="c4">4</span><span class="c4">4</span><span class="c5">5</span><span class="c5">5</span>
+          <span class="c3">3</span><span class="c3">3</span><span class="c3">3</span><span class="c5">5</span><span class="c5">5</span><span class="c5">5</span>
+        </div>
+        <p>
+          Dit is waarom tikken zo snel is: één array-opzoeking in plaats van
+          wiskunde op honderden vectorpaden. De id-map heeft in dit project
+          dezelfde resolutie als de plaat, maar het formaat staat ook een lagere
+          resolutie toe.
+        </p>
+      </div>
+
+      <h3>Waarom binair en niet JSON?</h3>
+      <div class="grid-3">
+        <article class="card">
+          <h3>Grootte</h3>
+          <p>
+            Een plaat heeft honderden vlakken met duizenden punten en een
+            id-map van een miljoen pixels. Als tekst zou dat megabytes kosten.
+            Binair plus compressie blijft rond de 200 KB.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Snelheid</h3>
+          <p>
+            De app hoeft geen tekst te ontleden. Hij leest getallen in een vaste
+            volgorde. Dat is voorspelbaar en snel, ook op een midrange-telefoon.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Veiligheid</h3>
+          <p>
+            De decoder controleert de magie, de versie, de lengte, de
+            zlib-checksum en alle ids. Een beschadigd bestand geeft een nette
+            fout in plaats van een crash.
+          </p>
+        </article>
+      </div>
+
+      <h3>Een bestand lezen in Kotlin</h3>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">docs/FORMAT.md</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code><span class="kw">val</span> plate = PlateCodec.read(File(<span class="str">"alpen-lautersee.kplate"</span>))
+println(<span class="str">"${plate.width}x${plate.height}, ${plate.regionCount} vlakken"</span>)
+
+<span class="kw">val</span> id = plate.regionIdAtNormalized(<span class="num">0.5f</span>, <span class="num">0.5f</span>)
+<span class="kw">val</span> regio = plate.regionById(id)
+println(<span class="str">"Kleur ${regio?.colorIndex?.plus(1)}"</span>)</code></pre>
+      </div>
+
+      <div class="callout warn">
+        <span class="label">Let op</span>
+        <p>
+          Alle getallen zijn <strong>big-endian</strong>: het meest
+          significante byte staat vooraan. Dat is de standaard van
+          <code>DataOutputStream</code> in Java/Kotlin. Als je ooit een decoder
+          in een andere taal schrijft, moet je daar rekening mee houden.
+        </p>
+      </div>
+
+      <h3>Veilig schrijven</h3>
+      <p>
+        De app schrijft nooit direct naar het echte bestand. Ze schrijft eerst
+        naar een tijdelijk bestand en hernoemt dat pas als alles gelukt is.
+        Daardoor kan een stroomstoring of crash nooit een half
+        <code>.kplate</code>-bestand achterlaten.
+      </p>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">format/PlateCodec.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code><span class="kw">val</span> temp = File(file.parentFile, file.name + <span class="str">".tmp"</span>)
+temp.writeBytes(encode(plate))
+<span class="kw">if</span> (!temp.renameTo(file)) {
+    file.writeBytes(temp.readBytes())
+    temp.delete()
+}</code></pre>
+      </div>
+
+      <p class="small">
+        De volledige specificatie, met alle velden en limieten, staat in
+        <a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/docs/FORMAT.md" target="_blank" rel="noopener">docs/FORMAT.md</a>.
+      </p>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="bord">
+      <div class="chapter">Hoofdstuk 7</div>
+      <h2>Het kleurbord</h2>
+      <p class="lead-in">
+        Het bord is het hart van de app. Het moet honderden vlakken tonen,
+        soepel zoomen, tikken herkennen, hints tekenen en na elke actie
+        onthouden wat je hebt gedaan. Dat doet het met twee bitmaplagen en één
+        dynamische laag.
+      </p>
+
+      <div class="shots">
+        <figure class="shot">
+          <img src="screenshot-kleurbord.jpg" alt="Het kleurbord met genummerde vlakken en het kleurenpalet onderin" loading="lazy" width="1080" height="2400">
+          <figcaption>Het bord: lijnen, nummers en een palet met de resterende vlakken per kleur.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="screenshot-voltooid.jpg" alt="Een voltooide kleurplaat met een kaart om te delen" loading="lazy" width="1080" height="2400">
+          <figcaption>Klaar: de lijnen en nummers faden weg. De plaat kan als PNG worden gedeeld.</figcaption>
+        </figure>
+      </div>
+
+      <h3>Drie lagen, zoals transparante vellen</h3>
+      <div class="layer-stack">
+        <div class="layer">
+          <span class="layer-num">3</span>
+          <div>
+            <strong>Dynamische laag</strong>
+            <span>Nummers, de hint-highlight en de voltooiingsanimatie. Deze laag verandert bij elke zoomstand en wordt elk frame opnieuw getekend.</span>
+          </div>
+        </div>
+        <div class="layer">
+          <span class="layer-num">2</span>
+          <div>
+            <strong>Lijnenlaag</strong>
+            <span>Alle omtrekken, één keer getekend. Verandert niet als je een vlak vult. Bewaard als ARGB-bitmap, want de lijnen moeten transparant kunnen zijn.</span>
+          </div>
+        </div>
+        <div class="layer">
+          <span class="layer-num">1</span>
+          <div>
+            <strong>Vullaag</strong>
+            <span>Het papier en alle ingekleurde vlakken. Verandert alleen op de plek waar je iets invult. Bewaard als RGB_565-bitmap: kleiner, en doorzichtigheid is hier niet nodig.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout tip">
+        <span class="label">Waarom dit snel is</span>
+        <p>
+          Compose hoeft per frame niet honderden paden opnieuw te tekenen. Het
+          hoeft alleen twee kant-en-klare bitmaps te tonen en daar de zichtbare
+          nummers en de hint bovenop te zetten. De dure arbeid is één keer
+          gebeurd, bij het openen van de plaat.
+        </p>
+      </div>
+
+      <h3>Wat er gebeurt als je tikt</h3>
+      <ol class="tapflow">
+        <li><b>1</b>Je vinger raakt het scherm</li>
+        <li><b>2</b>Schermpunt wordt plaatpunt</li>
+        <li><b>3</b>Id-map zegt welk vlak</li>
+        <li><b>4</b>ViewModel controleert de kleur</li>
+        <li><b>5</b>State wordt bijgewerkt</li>
+        <li><b>6</b>Voortgang wordt opgeslagen</li>
+        <li><b>7</b>Alleen dat stukje wordt hertekend</li>
+        <li><b>8</b>Je ziet de kleur verschijnen</li>
+      </ol>
+
+      <h4>Stap 2 en 3: van scherm naar vlak</h4>
+      <p>
+        Het canvas kent de plaat, de zoomstand en de pan. Het rekent een tik om
+        naar een genormaliseerde coördinaat tussen 0 en 1. Daarna vraagt het de
+        id-map welk vlak daar ligt.
+      </p>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">ui/board/BoardCanvas.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code><span class="kw">val</span> fit = min(viewWidth / plate.width, viewHeight / plate.height)
+<span class="kw">val</span> scale = fit * viewport.zoom
+<span class="kw">val</span> left = (viewWidth - plate.width * scale) / <span class="num">2f</span> + viewport.panX
+<span class="kw">val</span> top = (viewHeight - plate.height * scale) / <span class="num">2f</span> + viewport.panY
+<span class="kw">val</span> nx = (offset.x - left) / (plate.width * scale)
+<span class="kw">val</span> ny = (offset.y - top) / (plate.height * scale)
+
+<span class="kw">if</span> (nx <span class="kw">in</span> <span class="num">0f</span>..<span class="num">1f</span> &amp;&amp; ny <span class="kw">in</span> <span class="num">0f</span>..<span class="num">1f</span>) {
+    <span class="kw">val</span> id = plate.regionIdAtNormalized(nx, ny)
+    <span class="kw">if</span> (id &gt; <span class="num">0</span>) onTapRegion(id)
+}</code></pre>
+      </div>
+
+      <div class="callout plain">
+        <span class="label">Waarom geen Path.contains?</span>
+        <p>
+          Je zou kunnen vragen: waarom niet gewoon aan elk vectoppad vragen of
+          het punt erin ligt? Omdat dat bij honderden paden per tik te langzaam
+          is. De id-map is één opzoeking in een array. De paden zijn er om te
+          tekenen, niet om te testen.
+        </p>
+      </div>
+
+      <h4>Stap 4: alleen de juiste kleur</h4>
+      <p>
+        De ViewModel controleert of het vlak al gevuld is en of de gekozen kleur
+        klopt. Klopt het niet, dan komt er een vriendelijke melding. Er is geen
+        straf, geen tijdverlies en geen "fout"-geluid.
+      </p>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">ui/board/BoardViewModel.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code><span class="kw">if</span> (region.colorIndex != current.selectedColor) {
+    _state.update {
+        it.copy(message = <span class="str">"Dit vlak hoort bij kleur "</span> +
+            <span class="str">"${region.colorIndex + 1}. Kies die kleur hieronder."</span>)
+    }
+    <span class="kw">return</span> FillOutcome.WRONG_COLOR
+}</code></pre>
+      </div>
+
+      <h3>Alleen hertekenen wat verandert</h3>
+      <p>
+        Als je één vlak vult, hoeft de app niet de hele plaat opnieuw te
+        tekenen. Ze pakt de rechthoek rond dat vlak, maakt die plek schoon en
+        tekent alle ingekleurde vlakken die dat gebied raken opnieuw, in de
+        volgorde groot naar klein. Dat heet een <strong>dirty rect</strong>.
+      </p>
+      <p>
+        Waarom alle geraakte vlakken en niet alleen het nieuwe? Omdat een groot
+        achtergrondvlak details kan bevatten. Als je de achtergrond later vult,
+        moeten de kleine details die erbovenop liggen opnieuw getekend worden.
+      </p>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">ui/board/BoardRenderer.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code><span class="kw">if</span> (fullRedraw) {
+    redrawAll()
+} <span class="kw">else</span> {
+    <span class="kw">for</span> (regionId <span class="kw">in</span> changed) {
+        redrawRegionArea(regionId)
+    }
+}</code></pre>
+      </div>
+      <p>
+        Bij veel wijzigingen tegelijk (magisch vullen of het laden van
+        bestaande voortgang) is één volledige hertekening juist sneller. De
+        renderer kiest daarom zelf de slimste route.
+      </p>
+
+      <h3>Nummers die vanzelf rustig worden</h3>
+      <p>
+        Als je ver uitzoomt, zijn kleine vlakken niet leesbaar. Het bord tekent
+        een nummer daarom alleen als:
+      </p>
+      <ul>
+        <li>het zwaartepunt in of vlak bij het zichtbare gebied ligt;</li>
+        <li>het vlak op het scherm groot genoeg is (geschatte oppervlakte ≥ 220 px²);</li>
+        <li>er geen ander nummer binnen 24 dp staat.</li>
+      </ul>
+      <p>
+        Zoom je in, dan komen de nummers vanzelf terug. Zo blijft het beeld
+        rustig en hoeft de app niet honderden onleesbare labels te tekenen.
+      </p>
+
+      <h3>Hint, magie en undo</h3>
+      <div class="grid-3">
+        <article class="card">
+          <h3>Hint</h3>
+          <p>
+            De hint-modus bouwt één <code>Path</code> met alle nog lege vlakken
+            van de gekozen kleur. Die wordt met een doorschijnende laag over het
+            bord getekend. Eén pad tekenen is veel sneller dan honderden losse
+            paden per frame.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Magisch vullen</h3>
+          <p>
+            Houd een kleur in het palet ingedrukt (of tik op "Alles") om alle
+            resterende vlakken van die kleur in één keer te vullen. De actie
+            komt als één item op de undo-stack, dus één tik maakt alles weer
+            leeg.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Undo</h3>
+          <p>
+            Elke vulactie wordt als lijst met regio-ids op een stack gezet.
+            Undo haalt de laatste lijst eraf en maakt die vlakken weer leeg.
+            De stack leeft in het geheugen en is onbeperkt binnen de sessie.
+          </p>
+        </article>
+      </div>
+
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">ui/board/BoardViewModel.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code><span class="kw">private val</span> undoStack = ArrayDeque&lt;List&lt;Int&gt;&gt;()
+
+<span class="kw">fun</span> undo(): Boolean {
+    <span class="kw">val</span> action = undoStack.removeLastOrNull() ?: <span class="kw">return false</span>
+    <span class="kw">val</span> newFilled = current.filled - action.toSet()
+    _state.update { it.copy(filled = newFilled, undoDepth = undoStack.size) }
+    persist(newFilled)
+    <span class="kw">return true</span>
+}</code></pre>
+      </div>
+
+      <h3>Automatisch opslaan</h3>
+      <p>
+        Na elke vulactie, undo of magische actie roept de ViewModel
+        <code>persist</code> aan. De voortgang staat meteen in het geheugen en
+        wordt op de achtergrond naar schijf geschreven. Je hoeft dus nooit op
+        "opslaan" te drukken, en een plotselinge app-sluiting kost hooguit de
+        allerlaatste actie.
+      </p>
+
+      <h3>Klaar: reveal en delen</h3>
+      <p>
+        Als alle vlakken gevuld zijn, faden de lijnen en nummers in 1,6 seconde
+        weg. De voltooide plaat blijft over. Daarna verschijnt een kaart met
+        "Delen als PNG". De app rendert de gevulde plaat zonder lijnen naar een
+        bitmap en deelt die via een <code>FileProvider</code>. Zo komt er geen
+        opslagtoestemming aan te pas.
+      </p>
+
+      <div class="callout tip">
+        <span class="label">Waarom blijft het canvas licht in het donkere thema?</span>
+        <p>
+          De app eromheen wisselt wel van thema, maar het papier van de plaat
+          blijft crème. Kleuren uit de foto komen zo betrouwbaar over en de
+          plaat blijft rustig leesbaar. Een donker canvas zou de kleurbeleving
+          veranderen en sommige vlakken laten wegvallen.
+        </p>
+      </div>
+
+      <h3>Wat de ViewModel onthoudt</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Veld</th><th>Betekenis</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>plate</code></td><td>De geladen plaat met palet, vlakken en id-map.</td></tr>
+            <tr><td><code>filled</code></td><td>De set met ids van vlakken die al gevuld zijn.</td></tr>
+            <tr><td><code>selectedColor</code></td><td>De kleur die nu in het palet gekozen is.</td></tr>
+            <tr><td><code>showNumbers</code>, <code>hintsEnabled</code></td><td>Weergave-instellingen, live gevolgd uit de repository.</td></tr>
+            <tr><td><code>undoDepth</code></td><td>Hoeveel undo-acties er nog zijn.</td></tr>
+            <tr><td><code>completed</code></td><td>Of alle vlakken gevuld zijn.</td></tr>
+            <tr><td><code>message</code></td><td>Tijdelijke melding voor de snackbar.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout plain">
+        <span class="label">Eerlijke performance-status</span>
+        <p>
+          Op de emulator gebruikt een geopend bord ongeveer <strong>89 MB
+          PSS</strong>. De debug-APK is <strong>16 MB</strong>, de release zonder
+          signing <strong>11 MB</strong>. De echte gate — p95 onder 16 ms op een
+          Galaxy A54 — moet nog met Perfetto op hardware worden gemeten. Als dat
+          te veel jank geeft, zijn de voorbereide vervolgstappen: een lagere
+          bitmapresolutie, getegelde lagen of de vlakken als vector-overlay
+          tekenen.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="opslag">
+      <div class="chapter">Hoofdstuk 8</div>
+      <h2>Waar blijft alles?</h2>
+      <p class="lead-in">
+        Kleuren heeft geen account en geen server. Alles wat je maakt, blijft
+        op je toestel. Dat is niet alleen fijn voor je privacy; het maakt de
+        app ook een stuk eenvoudiger.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Wat</th><th>Waar</th><th>Hoe</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Voortgang per plaat</td>
+              <td><code>files/progress/&lt;id&gt;.bin</code></td>
+              <td>Klein binair bestand met alleen de gevulde regio-ids.</td>
+            </tr>
+            <tr>
+              <td>Eigen foto's</td>
+              <td><code>files/myplates/</code></td>
+              <td><code>index.json</code>, een <code>.kplate</code>, een preview en de bronfoto.</td>
+            </tr>
+            <tr>
+              <td>Aangepaste landschappen</td>
+              <td><code>files/landscape-variants/</code></td>
+              <td><code>index.json</code> plus één <code>.kplate</code> per landschap.</td>
+            </tr>
+            <tr>
+              <td>Instellingen</td>
+              <td><code>SharedPreferences</code> → <code>kleuren_settings</code></td>
+              <td>Een handvol booleans, een thema en een moeilijkheidsgraad.</td>
+            </tr>
+            <tr>
+              <td>Meegeleverde platen</td>
+              <td><code>app/src/main/assets/</code></td>
+              <td>Alleen-lezen. De generator schrijft ze; de app leest ze.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Het voortgangsbestand</h3>
+      <p>
+        Voortgang is verbazingwekkend klein: het is gewoon een lijst met
+        getallen. Welke vlakken zijn gevuld? Meer niet. Het bestand heeft de
+        magie <code>KPRG</code> en ziet er zo uit:
+      </p>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">files/progress/alpen-lautersee.bin</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code>4 bytes  "KPRG"
+1 byte   versie (1)
+4 bytes  aantal ids
+4 bytes  per id (gesorteerd)</code></pre>
+      </div>
+      <p>
+        Bij 314 vlakken is dat maximaal ongeveer 1,3 KB. Veel kleiner dan een
+        database met tabellen, indexen en migraties.
+      </p>
+
+      <h3>Waarom geen Room of DataStore?</h3>
+      <p>
+        Het oorspronkelijke plan noemde Room en DataStore. Voor deze
+        hoeveelheid data is dat overkill: het voegt code-generatie (KSP),
+        extra afhankelijkheden en migraties toe zonder echt voordeel.
+      </p>
+      <div class="grid-2">
+        <article class="card">
+          <h3>Wat er nu is</h3>
+          <p>
+            Kleine binaire bestanden voor voortgang, JSON-indexen voor eigen
+            foto's en <code>SharedPreferences</code> voor instellingen. Simpel,
+            snel en goed te begrijpen.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Wat er later kan</h3>
+          <p>
+            De repositories zijn de enige plek die de opslag kent. Je kunt ze
+            later door Room of DataStore vervangen zonder de UI aan te passen.
+            Dat is precies waarom de grens tussen lagen belangrijk is.
+          </p>
+        </article>
+      </div>
+
+      <h3>Veilig schrijven, ook hier</h3>
+      <p>
+        De voortgang wordt via een wachtrij geschreven. Een snelle reeks tikken
+        kan elkaars bestand daardoor niet overschrijven. Ook hier wordt eerst
+        een <code>.tmp</code>-bestand gemaakt en daarna pas hernoemd.
+      </p>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">data/ProgressRepository.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code><span class="comment">// De UI reageert meteen...</span>
+_progress.update { it + (plateId <span class="kw">to</span> normalized) }
+<span class="comment">// ...en de schrijfopdracht gaat één voor één door de wachtrij.</span>
+operations.trySend(ProgressOperation.Save(plateId, normalized))</code></pre>
+      </div>
+
+      <div class="callout tip">
+        <span class="label">Privacy in één zin</span>
+        <p>
+          Je foto's worden op het toestel verwerkt en nergens naartoe gestuurd.
+          Er is geen account, geen analytics en geen upload. Wissen kan via
+          <em>Instellingen → Gegevens</em>.
+        </p>
+      </div>
+
+      <h3>Een eigen foto opslaan</h3>
+      <p>
+        Als je een foto omzet, bewaart de app vier dingen in
+        <code>files/myplates/</code>:
+      </p>
+      <ul>
+        <li><code>&lt;id&gt;.kplate</code> — de kleurplaat zelf;</li>
+        <li><code>&lt;id&gt;.jpg</code> — de preview voor de bibliotheek;</li>
+        <li><code>&lt;id&gt;-source.jpg</code> — de bronfoto (max. 1600 px), zodat je later een andere moeilijkheid kunt kiezen;</li>
+        <li><code>index.json</code> — de lijst met titels, bestandsnamen en datums.</li>
+      </ul>
+      <p>
+        De bronfoto is bewust niet de originele 12 megapixel-foto: dat zou te
+        veel ruimte kosten. 1600 pixels is ruim genoeg om opnieuw een goede
+        plaat te maken.
+      </p>
+
+      <h3>Een landschap aanpassen</h3>
+      <p>
+        De originele landschappen blijven onaangeroerd in de APK-assets. Kies
+        je voor "Moeilijkheid aanpassen", dan maakt de app een lokale variant in
+        <code>files/landscape-variants/</code>. "Herstel origineel" verwijdert
+        die variant weer. Zo kan een update van de app de originele content
+        nooit overschrijven.
+      </p>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="app-laag">
+      <div class="chapter">Hoofdstuk 9</div>
+      <h2>De app-laag</h2>
+      <p class="lead-in">
+        De app-laag is de ober van het restaurant: hij toont wat er is, neemt
+        je acties aan en praat met de keuken. De UI is expres "dom" gehouden.
+        De ViewModel en de repositories doen het denkwerk.
+      </p>
+
+      <div class="arch" aria-label="MVVM-diagram">
+        <div class="arch-row">
+          <div class="arch-card android">
+            <strong>UI · Jetpack Compose</strong>
+            <span>Schermen, knoppen, het canvas. Toont state en stuurt acties door.</span>
+          </div>
+        </div>
+        <div class="arch-connector down">observeert / stuurt acties</div>
+        <div class="arch-row">
+          <div class="arch-card">
+            <strong>ViewModel</strong>
+            <span>Houdt de schermstate, valideert acties en start coroutines. Overleeft een schermdraai.</span>
+          </div>
+        </div>
+        <div class="arch-connector down">vraagt en bewaart</div>
+        <div class="arch-row two">
+          <div class="arch-card pure">
+            <strong>Repositories</strong>
+            <span>PlateRepository, ProgressRepository, SettingsRepository, UserPlateStore, LandscapeVariantStore.</span>
+          </div>
+          <div class="arch-card pure">
+            <strong>Bronnen</strong>
+            <span>Assets, interne bestanden, SharedPreferences en de pure Kotlin-modules.</span>
+          </div>
+        </div>
+      </div>
+
+      <h3>Eén container voor langlevende dingen</h3>
+      <p>
+        De <code>Application</code> maakt één <code>AppContainer</code> aan.
+        Daarin zitten de repositories en de generator. De Activity maakt ze niet
+        aan, want die gaat bij een schermdraai kapot. De ViewModels krijgen
+        alleen de repositories die ze nodig hebben via een factory.
+      </p>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">data/AppContainer.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code><span class="kw">class</span> AppContainer(context: Context) {
+    <span class="kw">val</span> settingsRepository = SettingsRepository(appContext)
+    <span class="kw">val</span> progressRepository = ProgressRepository(appContext)
+    <span class="kw">val</span> userPlateStore = UserPlateStore(appContext)
+    <span class="kw">val</span> landscapeVariantStore = LandscapeVariantStore(appContext)
+    <span class="kw">val</span> plateRepository = PlateRepository(...)
+    <span class="kw">val</span> plateGenerator = PlateGenerator(...)
+}</code></pre>
+      </div>
+
+      <h3>Vier schermen, één kleine navigatiestack</h3>
+      <p>
+        De app gebruikt geen Navigation Compose. Voor vier schermen is een
+        zelfgemaakte stack transparant en leerzaam: je ziet precies wat "terug"
+        doet. De routes worden als één string bewaard, zodat ze een schermdraai
+        en procesherstel overleven.
+      </p>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">ui/AppRoot.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code><span class="kw">var</span> routesCsv <span class="kw">by</span> rememberSaveable { mutableStateOf(ROUTE_LIBRARY) }
+<span class="kw">val</span> routes = routesCsv.split(ROUTE_SEPARATOR)
+
+<span class="kw">fun</span> navigate(route: String) { replaceStack(routes + route) }
+<span class="kw">fun</span> goBack() { <span class="kw">if</span> (routes.size &gt; <span class="num">1</span>) replaceStack(routes.dropLast(<span class="num">1</span>)) }
+
+BackHandler(enabled = routes.size &gt; <span class="num">1</span>) { goBack() }</code></pre>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Scherm</th><th>Wat je er doet</th><th>ViewModel</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Bibliotheek</td><td>Landschappen, "Verder gaan" en "Mijn foto's". Voortgang, moeilijkheid aanpassen, verwijderen.</td><td><code>LibraryViewModel</code></td></tr>
+            <tr><td>Kleurbord</td><td>Zoom, pan, vullen, hint, undo, magisch vullen, voltooien en delen.</td><td><code>BoardViewModel</code></td></tr>
+            <tr><td>Foto toevoegen</td><td>Foto kiezen, titel en moeilijkheid instellen, genereren met voortgang.</td><td><code>PhotoImportViewModel</code></td></tr>
+            <tr><td>Instellingen</td><td>Thema, nummers, hints, kleurblind-modus, haptics, moeilijkheid en gegevens wissen.</td><td><code>SettingsViewModel</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Waarom een ViewModel?</h3>
+      <p>
+        Een ViewModel overleeft een schermdraai. Als je je telefoon kantelt,
+        wordt de Activity opnieuw gemaakt, maar de ViewModel blijft. Je
+        geselecteerde kleur, je zoomstand en je voortgang gaan dus niet
+        verloren. De ViewModel bezit ook de undo-stack en de coroutines die
+        lopende zijn.
+      </p>
+      <p>
+        De UI observeert de state met
+        <code>collectAsStateWithLifecycle()</code>. Verandert de state, dan
+        maakt Compose alleen het stukje opnieuw dat ervan afhangt. Dat is
+        precies waarom de UI "dom" mag zijn: ze hoeft alleen de waarheid te
+        tonen die de ViewModel haar geeft.
+      </p>
+
+      <div class="callout plain">
+        <span class="label">Domme UI, slimme ViewModel</span>
+        <p>
+          In <code>LibraryScreen.kt</code> zie je geen berekeningen voor
+          voortgang. De ViewModel combineert vijf flows tot één
+          <code>LibraryUiState</code>. De UI tekent alleen wat daar in staat.
+          Dat maakt het scherm voorspelbaar en goed testbaar.
+        </p>
+      </div>
+
+      <h3>Instellingen die meteen werken</h3>
+      <p>
+        <code>SettingsRepository</code> leest en schrijft
+        <code>SharedPreferences</code> en stelt de waarden beschikbaar als een
+        <code>StateFlow</code>. Een schakelaar aanpassen is daardoor meteen
+        zichtbaar in de hele app, ook op een bord dat al open is. Er is geen
+        "opslaan"-knop nodig.
+      </p>
+
+      <h3>De bibliotheek in het kort</h3>
+      <ul>
+        <li><strong>Landschappen</strong>: packs uit het manifest, met preview en voortgang.</li>
+        <li><strong>Verder gaan</strong>: alles waar je aan begon maar nog niet af hebt, gesorteerd op laatst geopend.</li>
+        <li><strong>Mijn foto's</strong>: lokaal gemaakte platen met een menu voor moeilijkheid en verwijderen.</li>
+      </ul>
+      <p>
+        De bibliotheek leest alleen het manifest en de kleine previews, niet
+        alle <code>.kplate</code>-bestanden. Een plaat wordt pas gedecodeerd als
+        je hem opent. Geopende platen en previews hebben een kleine
+        LRU-cache, zodat heen en weer navigeren niet opnieuw hoeft te decoderen.
+      </p>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="content">
+      <div class="chapter">Hoofdstuk 10</div>
+      <h2>Content maken</h2>
+      <p class="lead-in">
+        De tien landschappen zijn niet met de hand getekend. Ze zijn gegenereerd
+        met dezelfde pipeline als je eigen foto's. De generator draait op je
+        laptop en schrijft de bestanden naar de assets.
+      </p>
+
+      <h3>De configuratie</h3>
+      <p>
+        In <code>content/content.json</code> staan de packs, titels, bronfoto's,
+        credits en het gewenste aantal kleuren. Een klein voorbeeld:
+      </p>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">content/content.json</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code>{
+  <span class="str">"packs"</span>: [{
+    <span class="str">"id"</span>: <span class="str">"alpen"</span>,
+    <span class="str">"title"</span>: <span class="str">"Alpen &amp; Meren"</span>,
+    <span class="str">"description"</span>: <span class="str">"Rustige bergmeren, machtige toppen en zachte wolken."</span>,
+    <span class="str">"plates"</span>: [{
+      <span class="str">"id"</span>: <span class="str">"alpen-lautersee"</span>,
+      <span class="str">"title"</span>: <span class="str">"Lautersee"</span>,
+      <span class="str">"subtitle"</span>: <span class="str">"Beieren, Duitsland"</span>,
+      <span class="str">"source"</span>: <span class="str">"source/alpen-lautersee.jpg"</span>,
+      <span class="str">"credit"</span>: <span class="str">"Taubenflieger68 / Wikimedia Commons"</span>,
+      <span class="str">"license"</span>: <span class="str">"CC0"</span>,
+      <span class="str">"sourceUrl"</span>: <span class="str">"https://commons.wikimedia.org/..."</span>,
+      <span class="str">"colors"</span>: <span class="num">16</span>
+    }]
+  }]
+}</code></pre>
+      </div>
+
+      <h3>Draaien</h3>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">terminal</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code>./gradlew :tools:generator:run --args=<span class="str">"content/content.json app/src/main/assets"</span></code></pre>
+      </div>
+      <p>De generator schrijft:</p>
+      <ul>
+        <li><code>app/src/main/assets/plates/&lt;id&gt;.kplate</code></li>
+        <li><code>app/src/main/assets/previews/&lt;id&gt;.jpg</code></li>
+        <li><code>app/src/main/assets/sources/&lt;id&gt;.jpg</code> (max. 1200 px)</li>
+        <li><code>app/src/main/assets/plates/manifest.json</code></li>
+        <li><code>content/CREDITS.md</code></li>
+      </ul>
+
+      <h3>De vijf moeilijkheidsgraden</h3>
+      <p>
+        Elk niveau vertaalt zich naar dezelfde <code>ConvertOptions</code>.
+        "Normaal" is exact gelijk aan de standaardwaarden uit het plan.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Niveau</th><th>Kleuren</th><th>Vlakken (streef)</th><th>Min. vlakgrootte</th><th>Contourvereenvoudiging</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Zeer makkelijk</td><td class="num">12</td><td class="num">150–300</td><td class="num">0,12%</td><td class="num">2,4 px</td></tr>
+            <tr><td>Makkelijk</td><td class="num">13</td><td class="num">220–450</td><td class="num">0,08%</td><td class="num">2,0 px</td></tr>
+            <tr><td>Normaal</td><td class="num">14</td><td class="num">300–800</td><td class="num">0,04%</td><td class="num">1,6 px</td></tr>
+            <tr><td>Moeilijk</td><td class="num">17</td><td class="num">450–800</td><td class="num">0,03%</td><td class="num">1,4 px</td></tr>
+            <tr><td>Zeer moeilijk</td><td class="num">20</td><td class="num">600–800</td><td class="num">0,02%</td><td class="num">1,2 px</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <span class="label">In gewone taal</span>
+        <p>
+          Meer kleuren betekent meer detail en meer werk. Een kleinere
+          minimumvlakgrootte betekent meer kleine vlakjes. Een lagere
+          contourvereenvoudiging betekent scherpere, maar ook jagere randen.
+          De vijf niveaus zijn verschillende standen van dezelfde vijf
+          knoppen.
+        </p>
+      </div>
+
+      <h3>Wat de huidige content doet</h3>
+      <p>
+        De tien platen hebben <strong>240–591 vlakken</strong> en
+        <strong>13–20 kleuren</strong>. Drie platen zitten iets onder de
+        plan-bandbreedte van 300 doordat ze grote egale luchten of zeeën
+        hebben. Dat is bewust geaccepteerd: grote, goed aanraakbare vlakken zijn
+        voor een ontspannende app belangrijker dan een exact aantal. De
+        content-QA-test bewaakt minimaal 220 vlakken en 12–20 kleuren.
+      </p>
+
+      <h3>Zelf een landschap toevoegen</h3>
+      <ol>
+        <li>Zet een foto in <code>content/source/</code>. Gebruik een bron met een duidelijke licentie, liefst CC0.</li>
+        <li>Voeg een plaat toe aan <code>content/content.json</code> met een uniek <code>id</code>, titel, bronpad, credit en licentie.</li>
+        <li>Draai de generator.</li>
+        <li>Open de app en controleer de plaat visueel: geen mini-vlakjes, leesbare nummers, geen twee bijna gelijke kleuren.</li>
+        <li>Commit de nieuwe assets, het manifest en <code>CREDITS.md</code>.</li>
+      </ol>
+
+      <h3>Parameters om aan te draaien</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Parameter</th><th>Effect</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>colorCount</code></td><td>Meer kleuren = meer detail en meer werk.</td></tr>
+            <tr><td><code>minRegionFraction</code></td><td>Grotere waarde = minder kleine vlakjes.</td></tr>
+            <tr><td><code>targetMinRegions</code> / <code>targetMaxRegions</code></td><td>Streefband voor het aantal vlakken.</td></tr>
+            <tr><td><code>simplifyEpsilon</code></td><td>Hoger = vloeiendere, minder jagende contouren.</td></tr>
+            <tr><td><code>maxSide</code></td><td>Lager = grover en sneller.</td></tr>
+            <tr><td><code>maxColorAttempts</code></td><td>Hoe vaak de pipeline opnieuw probeert om binnen de band te landen.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warn">
+        <span class="label">Let op</span>
+        <p>
+          De generator gebruikt standaard drie pogingen, de app twee. De
+          generator mag wat langer draaien om precies binnen de bandbreedte te
+          landen; de app wil de wachttijd kort houden.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="testen">
+      <div class="chapter">Hoofdstuk 11</div>
+      <h2>Testen</h2>
+      <p class="lead-in">
+        Een test is een vangnet. Je schrijft op wat er moet gebeuren en laat de
+        computer controleren of dat nog steeds zo is. Vooral bij een binair
+        formaat en wiskundige pijplijnen is dat goud waard.
+      </p>
+
+      <div class="grid-3">
+        <article class="card">
+          <h3>Unit tests</h3>
+          <p>
+            Snel, op je laptop, zonder Android. Ze testen het formaat, de
+            pipeline, de moeilijkheidsgraad en de index van eigen foto's.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Content-QA</h3>
+          <p>
+            Een test over alle meegeleverde <code>.kplate</code>-bestanden:
+            bestaan ze, hebben ze een geldig palet en genoeg vlakken?
+          </p>
+        </article>
+        <article class="card">
+          <h3>Instrumented tests</h3>
+          <p>
+            Draaien op een emulator of toestel. Ze testen de Compose-UI,
+            bijvoorbeeld of pinch-zoom werkt en of een tik een vlak vult.
+          </p>
+        </article>
+      </div>
+
+      <h3>De commando's</h3>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">terminal</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code><span class="comment"># Pure Kotlin: bestandsformaat en fotopijplijn</span>
+./gradlew :format:test :pipeline:test
+
+<span class="comment"># App-unit tests, inclusief QA over alle meegeleverde platen</span>
+./gradlew :app:testDebugUnitTest
+
+<span class="comment"># Instrumented tests op een draaiende emulator of toestel</span>
+./gradlew :app:connectedDebugAndroidTest</code></pre>
+      </div>
+
+      <h3>Wat wordt er precies beschermd?</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Test</th><th>Wat hij controleert</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>PlateCodecTest</code></td><td>Round-trip van een plaat, ongeldige magie, verkeerde versie, beschadigde data, dubbele ids.</td></tr>
+            <tr><td><code>PhotoToPlateTest</code></td><td>Of de pipeline geldige platen maakt met de verwachte kleuren en vlakken.</td></tr>
+            <tr><td><code>DifficultyTest</code></td><td>Of elk niveau de juiste <code>ConvertOptions</code> oplevert en of onbekende waarden terugvallen op "Normaal".</td></tr>
+            <tr><td><code>ManifestContentTest</code></td><td>Of alle meegeleverde platen bestaan, leesbaar zijn en binnen de contentafspraken vallen.</td></tr>
+            <tr><td><code>UserPlateIndexTest</code></td><td>Of de index van eigen foto's compatibel blijft met oudere en nieuwere velden.</td></tr>
+            <tr><td><code>AppSmokeTest</code></td><td>Of de app start en de belangrijkste UI-elementen bereikbaar zijn.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Waarom de tests op je laptop draaien</h3>
+      <p>
+        Omdat <code>:format</code> en <code>:pipeline</code> geen Android
+        kennen, heb je geen emulator nodig. De tests starten in seconden. Dat
+        nodigt uit om ze vaak te draaien, en dat is precies de bedoeling.
+      </p>
+
+      <h3>CI</h3>
+      <p>
+        De kant-en-klare GitHub Actions-workflow staat in
+        <code>docs/ci-android.yml</code>. Hij draait de unit tests, de
+        app-tests en bouwt een debug-APK. De workflow is nog niet actief in de
+        repository, omdat de gebruikte GitHub-token geen <code>workflow</code>-scope
+        had. Activeren kan door het bestand naar
+        <code>.github/workflows/android.yml</code> te kopiëren en te pushen.
+      </p>
+
+      <div class="callout tip">
+        <span class="label">Groen is niet alles</span>
+        <p>
+          Een test kan controleren of een plaat geldig is, maar niet of hij
+          mooi is. Content-QA blijft mensenwerk: kleur een plaat zelf (deels)
+          in, kijk of de nummers leesbaar zijn en of er geen frustrerende
+          mini-vlakjes zijn.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="woordenboek">
+      <div class="chapter">Hoofdstuk 12</div>
+      <h2>Woordenboek</h2>
+      <p class="lead-in">
+        Tijdens het lezen kom je veel jargon tegen. Hier staan de belangrijkste
+        woorden in gewone taal. Typ hieronder om te zoeken; de lijst filtert
+        meteen.
+      </p>
+
+      <div class="glossary-controls">
+        <div class="search-wrap">
+          <label for="glossary-search" class="visually-hidden">Zoek in het woordenboek</label>
+          <input id="glossary-search" type="search" placeholder="Zoek een begrip…" autocomplete="off">
+        </div>
+        <p class="glossary-count" id="glossary-count" aria-live="polite">39 begrippen</p>
+      </div>
+
+      <div class="glossary-grid">
+        <article class="term" data-term="android besturingssysteem telefoon">
+          <h3>Android</h3>
+          <p>Het besturingssysteem van de meeste telefoons van Samsung, Google, OnePlus en vele anderen. Kleuren is een native Android-app.</p>
+        </article>
+        <article class="term" data-term="kotlin programmeertaal taal">
+          <h3>Kotlin</h3>
+          <p>De programmeertaal waarin de app is geschreven. Kotlin draait op de Java Virtual Machine en is de standaardtaal voor moderne Android-apps.</p>
+        </article>
+        <article class="term" data-term="gradle build bouwen modules">
+          <h3>Gradle</h3>
+          <p>De bouwvakker van het project. Gradle leest de configuratie, compileert de modules, draait tests en maakt de APK.</p>
+        </article>
+        <article class="term" data-term="jetpack compose ui declaratief">
+          <h3>Jetpack Compose</h3>
+          <p>De toolkit waarmee de schermen zijn gebouwd. Je beschrijft in Kotlin hoe de UI eruit moet zien; Compose werkt de rest bij als de state verandert.</p>
+        </article>
+        <article class="term" data-term="composable functie ui scherm">
+          <h3>Composable</h3>
+          <p>Een functie met <code>@Composable</code> die een stukje scherm beschrijft. Bijvoorbeeld een knop, een kaart of het hele kleurbord.</p>
+        </article>
+        <article class="term" data-term="viewmodel state scherm">
+          <h3>ViewModel</h3>
+          <p>Een object dat de state van een scherm bezit en een schermdraai overleeft. De UI leest de state en stuurt acties naar de ViewModel.</p>
+        </article>
+        <article class="term" data-term="stateflow flow observeerbaar state">
+          <h3>StateFlow</h3>
+          <p>Een observeerbare "huidige toestand". De UI kan zich eraan abonneren en krijgt automatisch een update als de waarde verandert.</p>
+        </article>
+        <article class="term" data-term="coroutine achtergrondtaak async">
+          <h3>Coroutine</h3>
+          <p>Een lichte achtergrondtaak. Coroutines zorgen dat zwaar werk zoals foto's verwerken niet op de main-thread gebeurt, zodat de UI soepel blijft.</p>
+        </article>
+        <article class="term" data-term="repository opslag data laag">
+          <h3>Repository</h3>
+          <p>De laag tussen de app en de opslag. De rest van de app vraagt "geef me de voortgang" en hoeft niet te weten of dat uit een bestand, database of cache komt.</p>
+        </article>
+        <article class="term" data-term="mvvm model view viewmodel architectuur">
+          <h3>MVVM</h3>
+          <p>Model-View-ViewModel: een patroon waarbij de ViewModel de state en logica bezit, en de View alleen toont. Kleuren gebruikt deze structuur.</p>
+        </article>
+        <article class="term" data-term="manifest json inhoudsopgave">
+          <h3>Manifest</h3>
+          <p>Een JSON-bestand dat vertelt welke packs en platen er zijn, met titels, credits en bestandspaden. De generator schrijft het, de app leest het.</p>
+        </article>
+        <article class="term" data-term="asset meegeleverd bestand apk">
+          <h3>Asset</h3>
+          <p>Een bestand dat meegeleverd wordt in de APK, zoals de tien <code>.kplate</code>-platen, previews en bronfoto's. De app kan assets alleen lezen.</p>
+        </article>
+        <article class="term" data-term="apk android package installeren">
+          <h3>APK</h3>
+          <p>Het installatiebestand van een Android-app. De debug-APK van Kleuren is ongeveer 16 MB; de release zonder signing ongeveer 11 MB.</p>
+        </article>
+        <article class="term" data-term="bitmap pixels afbeelding">
+          <h3>Bitmap</h3>
+          <p>Een rechthoekig rooster van gekleurde pixels in het geheugen. Het bord gebruikt twee bitmaplagen: één voor de vulling en één voor de lijnen.</p>
+        </article>
+        <article class="term" data-term="canvas tekenen tekenvlak">
+          <h3>Canvas</h3>
+          <p>Een tekenvlak waarop je lijnen, vormen en tekst kunt zetten. Het bord gebruikt een Android Canvas voor de bitmaplagen en Compose Canvas voor het scherm.</p>
+        </article>
+        <article class="term" data-term="argb kleur getal alpha rood groen blauw">
+          <h3>ARGB</h3>
+          <p>Een kleur als één getal: Alpha (doorzichtigheid), Red, Green en Blue. Bijvoorbeeld <code>0xFF486B50</code> is een ondoorzichtige groene kleur.</p>
+        </article>
+        <article class="term" data-term="pixel beeldpunt">
+          <h3>Pixel</h3>
+          <p>Eén beeldpunt van een foto of scherm. Een foto van 1200 bij 800 pixels bestaat uit 960.000 pixels.</p>
+        </article>
+        <article class="term" data-term="k-means clusteren kleuren kwantisatie">
+          <h3>K-means</h3>
+          <p>Een algoritme dat dingen in K groepjes verdeelt. Kleuren gebruikt het om alle pixels terug te brengen tot 12–20 paletkleuren.</p>
+        </article>
+        <article class="term" data-term="kwantisatie kleuren beperken">
+          <h3>Kwantisatie</h3>
+          <p>Het terugbrengen van een groot aantal kleuren naar een klein aantal. Daardoor ontstaan de egale vlakken van een kleurplaat.</p>
+        </article>
+        <article class="term" data-term="delta e kleurafstand perceptie lab">
+          <h3>Delta E</h3>
+          <p>Een maat voor hoeveel twee kleuren op het menselijk oog lijken. Een lage Delta E betekent "bijna hetzelfde"; die kleuren worden samengevoegd.</p>
+        </article>
+        <article class="term" data-term="connected component vlakken flood fill">
+          <h3>Connected component</h3>
+          <p>Een groep pixels van dezelfde kleur die aan elkaar grenzen. Elke connected component wordt één inkleurbaar vlak.</p>
+        </article>
+        <article class="term" data-term="flood fill buren vullen">
+          <h3>Flood fill</h3>
+          <p>Een techniek die alle bereikbare pixels van dezelfde kleur opzoekt, als water dat een vorm vult. De extractor gebruikt een iteratieve variant met een wachtrij.</p>
+        </article>
+        <article class="term" data-term="contour omtrek rand">
+          <h3>Contour</h3>
+          <p>De buitenrand van een vlak. De tracer loopt langs de pixelanden en maakt daar een vectorpad van.</p>
+        </article>
+        <article class="term" data-term="douglas peucker vereenvoudigen pad">
+          <h3>Douglas–Peucker</h3>
+          <p>Een algoritme dat een lijn met veel punten vereenvoudigt tot alleen de belangrijke punten. Zo worden pixel-trappen vloeiende contouren.</p>
+        </article>
+        <article class="term" data-term="vectorpad pad punten schaalbaar">
+          <h3>Vectorpad</h3>
+          <p>Een vorm beschreven met punten en lijnen in plaats van pixels. Daardoor blijft de vorm scherp bij elke zoomstand.</p>
+        </article>
+        <article class="term" data-term="id-map hit testing opzoektabel">
+          <h3>Id-map</h3>
+          <p>Een raster dat per pixel zegt welk vlak daar ligt. Tikken wordt daardoor één opzoeking in plaats van dure wiskunde op alle paden.</p>
+        </article>
+        <article class="term" data-term="hit-testing tik raken">
+          <h3>Hit-testing</h3>
+          <p>Bepalen welk object je hebt aangeraakt. Het bord gebruikt de id-map voor hit-testing.</p>
+        </article>
+        <article class="term" data-term="dirty rect hertekenen">
+          <h3>Dirty rect</h3>
+          <p>De rechthoek die opnieuw getekend moet worden. In plaats van de hele plaat hertekenen, vernieuwt het bord alleen het gebied rond het gevulde vlak.</p>
+        </article>
+        <article class="term" data-term="zlib compressie checksum">
+          <h3>Zlib</h3>
+          <p>Een compressiemethode met een ingebouwde checksum. De inhoud van een <code>.kplate</code>-bestand wordt ermee ingepakt, zodat het klein blijft en beschadiging opvalt.</p>
+        </article>
+        <article class="term" data-term="lru cache geheugen">
+          <h3>LRU-cache</h3>
+          <p>"Least Recently Used": een cache die de minst recent gebruikte items als eerste weggooit. De app bewaart zo een paar geopende platen en previews in het geheugen.</p>
+        </article>
+        <article class="term" data-term="big endian bytes volgorde">
+          <h3>Big-endian</h3>
+          <p>Een afspraak over de volgorde van bytes: het meest significante byte staat vooraan. Alle getallen in een <code>.kplate</code>-bestand zijn big-endian.</p>
+        </article>
+        <article class="term" data-term="atomisch schrijven tijdelijk bestand rename">
+          <h3>Atomisch schrijven</h3>
+          <p>Eerst naar een tijdelijk bestand schrijven en dat pas hernoemen als alles gelukt is. Zo blijft er nooit een half bestand achter.</p>
+        </article>
+        <article class="term" data-term="sharedpreferences instellingen opslag">
+          <h3>SharedPreferences</h3>
+          <p>Een eenvoudige sleutel-waarde-opslag van Android. Kleuren bewaart daar de schakelaars, het thema en de standaardmoeilijkheid.</p>
+        </article>
+        <article class="term" data-term="photo picker foto kiezer toestemming">
+          <h3>Photo Picker</h3>
+          <p>De fotokiezer van Android. De app krijgt alleen de foto die je aanwijst en heeft daardoor geen opslagtoestemming nodig.</p>
+        </article>
+        <article class="term" data-term="jpeg jpg compressie foto">
+          <h3>JPEG</h3>
+          <p>Een veelgebruikt formaat voor foto's. Het comprimeert met verlies, maar is klein. De preview en de opgeslagen bronfoto zijn JPEG's.</p>
+        </article>
+        <article class="term" data-term="png delen afbeelding verliesvrij">
+          <h3>PNG</h3>
+          <p>Een afbeeldingsformaat zonder kwaliteitsverlies. De voltooide kleurplaat wordt als PNG gedeeld, zodat de kleuren zuiver blijven.</p>
+        </article>
+        <article class="term" data-term="unit test test laptop">
+          <h3>Unit test</h3>
+          <p>Een snelle test van één stukje code, zonder scherm of toestel. De tests van <code>:format</code> en <code>:pipeline</code> zijn unit tests.</p>
+        </article>
+        <article class="term" data-term="instrumented test emulator compose">
+          <h3>Instrumented test</h3>
+          <p>Een test die op een emulator of echt toestel draait en de UI aanstuurt, bijvoorbeeld een tik op het bord of een pinch-zoom.</p>
+        </article>
+        <article class="term" data-term="ci continuous integration github actions">
+          <h3>CI</h3>
+          <p>Continuous Integration: automatisch tests en builds draaien na een wijziging. De workflow staat klaar in <code>docs/ci-android.yml</code>.</p>
+        </article>
+      </div>
+
+      <p class="glossary-empty" id="glossary-empty" hidden>Geen begrip gevonden. Probeer een ander woord.</p>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="faq">
+      <div class="chapter">Hoofdstuk 13</div>
+      <h2>Vragen die je waarschijnlijk hebt</h2>
+      <p class="lead-in">
+        Korte antwoorden op de dingen die tijdens het lezen vaak blijven
+        hangen. Klik een vraag open.
+      </p>
+
+      <div class="faq-list">
+        <details class="faq">
+          <summary>Moet ik echt alle code lezen?</summary>
+          <div class="answer">
+            <p>
+              Nee. Begin met <code>PhotoToPlate.kt</code>,
+              <code>PlateCodec.kt</code> en <code>BoardRenderer.kt</code>. Dat
+              zijn de drie kernideeën. De UI, opslag en testen kun je daarna
+              gericht opzoeken wanneer je ze nodig hebt.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Waarom zijn de comments en de app in het Nederlands?</summary>
+          <div class="answer">
+            <p>
+              Kleuren is een leerproject voor Nederlandstalige
+              (beginnende) ontwikkelaars. De code is bewust leesbaar gehouden.
+              Voor een echte release is het verstandig om UI-teksten naar
+              <code>strings.xml</code> te verplaatsen en Engels toe te voegen.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Waarom blijft het canvas licht in het donkere thema?</summary>
+          <div class="answer">
+            <p>
+              De kleuren komen uit een foto. Op een donkere achtergrond ervaar
+              je die kleuren anders en vallen sommige vlakken weg. Het papier
+              blijft daarom crème; de app eromheen wisselt wel van thema.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Waarom geen Room of DataStore?</summary>
+          <div class="answer">
+            <p>
+              De data is klein: een set regio-ids per plaat en een handvol
+              instellingen. Kleine binaire bestanden en
+              <code>SharedPreferences</code> zijn dan simpeler, sneller en
+              hebben geen code-generatie of migraties nodig. De repositories
+              zijn zo ontworpen dat je ze later kunt vervangen.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Waarom geen Navigation Compose?</summary>
+          <div class="answer">
+            <p>
+              De app heeft vier schermen. Een zelfgemaakte stack van routes is
+              dan transparant en leerzaam: je ziet precies wat "terug" doet.
+              Voor een grotere app is Navigation Compose de logische volgende
+              stap.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Hoe weet de app welke kleur bij een vlak hoort?</summary>
+          <div class="answer">
+            <p>
+              Elk vlak heeft een <code>colorIndex</code>: een verwijzing naar
+              een plek in het palet. De id-map zegt welk vlak je raakt. Samen
+              geven ze in twee opzoekingen de juiste kleur.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Wat gebeurt er als ik de verkeerde kleur kies?</summary>
+          <div class="answer">
+            <p>
+              Dan verschijnt een vriendelijke melding: "Dit vlak hoort bij
+              kleur 7. Kies die kleur hieronder." Er is geen straf, geen timer
+              en geen levenssysteem. Je kunt gewoon doorgaan.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Hoe lang duurt het om een foto om te zetten?</summary>
+          <div class="answer">
+            <p>
+              Dat hangt af van het toestel en de foto. De pijplijn draait op
+              <code>Dispatchers.Default</code> en toont voortgang per fase. Het
+              plan mikte op minder dan 5 seconden voor een 12 megapixel-foto op
+              een Galaxy A54; de echte meting op hardware staat nog open.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Kan ik zelf een landschap toevoegen?</summary>
+          <div class="answer">
+            <p>
+              Ja. Zet een foto in <code>content/source/</code>, voeg een plaat
+              toe aan <code>content/content.json</code> en draai de generator.
+              Zorg voor een duidelijke licentie en vul de credit in. Zie
+              <a href="#content">Content maken</a>.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Werkt dit ook op iOS?</summary>
+          <div class="answer">
+            <p>
+              Niet direct. De app is native Android met Kotlin en Jetpack
+              Compose. De pure Kotlin-modules <code>:format</code> en
+              <code>:pipeline</code> zouden in theorie op Kotlin Multiplatform
+              kunnen draaien, maar de UI en opslag zijn Android-specifiek.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Wat is nog niet af?</summary>
+          <div class="answer">
+            <p>
+              De grootste openstaande punten zijn de Perfetto-meting op een
+              Galaxy A54, geluid/onboarding, een preview van de kleurplaat op de
+              bibliotheekkaarten, remote packs en de Play Console-stappen
+              (closed test, privacybeleid, release met R8). De app is een
+              leerproject, geen afgerond product.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Mag ik de code en de foto's hergebruiken?</summary>
+          <div class="answer">
+            <p>
+              De app-code staat onder de MIT-licentie; je mag hem gebruiken,
+              aanpassen en verspreiden met behoud van de licentie. De
+              bronfoto's zijn CC0 (publiek domein). Zie
+              <code>LICENSE</code> en <code>content/CREDITS.md</code>.
+            </p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="oefeningen">
+      <div class="chapter">Hoofdstuk 14</div>
+      <h2>Oefeningen</h2>
+      <p class="lead-in">
+        Je leert pas echt door iets te veranderen. Kies een niveau en begin.
+        Elke oefening zegt welke bestanden je nodig hebt en hoe je controleert
+        of het gelukt is.
+      </p>
+
+      <div class="exercise-grid">
+        <article class="exercise">
+          <span class="level">Beginner</span>
+          <h3>Verander de ondertitel</h3>
+          <ol>
+            <li>Open <code>ui/library/LibraryScreen.kt</code>.</li>
+            <li>Zoek de tekst <em>"Kleur op je eigen tempo."</em>.</li>
+            <li>Vervang hem door iets van jezelf.</li>
+            <li>Draai de app en bekijk de bibliotheek.</li>
+          </ol>
+          <details>
+            <summary>Hulp &amp; controle</summary>
+            <p>
+              De tekst staat in de <code>LibraryHeader</code>-composable. Je
+              hoeft alleen de string te wijzigen. Als de app niet bouwt, kijk
+              dan of je de aanhalingstekens hebt laten staan.
+            </p>
+          </details>
+        </article>
+
+        <article class="exercise">
+          <span class="level">Beginner</span>
+          <h3>Verander de papierkleur</h3>
+          <ol>
+            <li>Open <code>ui/board/BoardCanvas.kt</code>.</li>
+            <li>Zoek <code>val paper = Color(0xFFFBF7EE)</code>.</li>
+            <li>Probeer een andere hexkleur, bijvoorbeeld <code>0xFFF2E6D8</code>.</li>
+            <li>Open een plaat en kijk wat er gebeurt.</li>
+          </ol>
+          <details>
+            <summary>Hulp &amp; controle</summary>
+            <p>
+              <code>0xFF</code> is de alpha (ondoorzichtig), daarna komen rood,
+              groen en blauw. Verander één of twee kanalen en kijk hoe de
+              sfeer verandert. Vergeet niet dat de lijnen en cijfers ook een
+              vaste kleur hebben.
+            </p>
+          </details>
+        </article>
+
+        <article class="exercise">
+          <span class="level">Beginner</span>
+          <h3>Draai de tests</h3>
+          <ol>
+            <li>Open een terminal in de projectmap.</li>
+            <li>Draai <code>./gradlew :format:test :pipeline:test</code>.</li>
+            <li>Lees de samenvatting: hoeveel tests, hoeveel geslaagd?</li>
+            <li>Open één testbestand en zoek een testnaam die je begrijpt.</li>
+          </ol>
+          <details>
+            <summary>Hulp &amp; controle</summary>
+            <p>
+              De eerste keer kan Gradle dependencies downloaden; daarna is het
+              snel. Groen betekent niet dat de app mooi is, wel dat de
+              afspraken van het formaat en de pijplijn nog kloppen.
+            </p>
+          </details>
+        </article>
+
+        <article class="exercise">
+          <span class="level">Gevorderd</span>
+          <h3>Standaard op "Makkelijk" starten</h3>
+          <ol>
+            <li>Open <code>data/SettingsRepository.kt</code>.</li>
+            <li>Zoek de standaardwaarde van <code>difficulty</code>.</li>
+            <li>Zet die op <code>Difficulty.EASY</code>.</li>
+            <li>Verwijder de app-data of installeer opnieuw en test.</li>
+          </ol>
+          <details>
+            <summary>Hulp &amp; controle</summary>
+            <p>
+              Let op: er zijn twee plekken. De default in
+              <code>AppSettings</code> én de fallback in
+              <code>readFromPreferences()</code>. Een bestaande installatie
+              heeft al een opgeslagen waarde; die verandert niet vanzelf.
+              Test daarom met een schone installatie of wis de app-data.
+            </p>
+          </details>
+        </article>
+
+        <article class="exercise">
+          <span class="level">Gevorderd</span>
+          <h3>Voeg een nieuw landschap toe</h3>
+          <ol>
+            <li>Kies een CC0-foto en zet hem in <code>content/source/</code>.</li>
+            <li>Voeg een blok toe aan <code>content/content.json</code>.</li>
+            <li>Draai de generator.</li>
+            <li>Open de app en kleur een deel van de nieuwe plaat in.</li>
+          </ol>
+          <details>
+            <summary>Hulp &amp; controle</summary>
+            <p>
+              Gebruik een uniek <code>id</code> en controleer of het bronpad
+              klopt. De generator waarschuwt als de plaat buiten de
+              vlakkenband valt. Kijk ook of de nieuwe preview en
+              <code>CREDITS.md</code> zijn bijgewerkt.
+            </p>
+          </details>
+        </article>
+
+        <article class="exercise">
+          <span class="level">Uitdaging</span>
+          <h3>Maak de hint subtieler</h3>
+          <ol>
+            <li>Open <code>ui/board/BoardCanvas.kt</code>.</li>
+            <li>Zoek <code>hintPaint.alpha = 70</code>.</li>
+            <li>Probeer 35 en daarna 110.</li>
+            <li>Kijk hoe goed de hint nog zichtbaar is op lichte en donkere vlakken.</li>
+          </ol>
+          <details>
+            <summary>Hulp &amp; controle</summary>
+            <p>
+              De hint gebruikt de geselecteerde kleur met een lage alpha.
+              Probeer ook de outline-alpha aan te passen. Dit is een goede
+              oefening in "klein verschil, groot effect" en in het belang van
+              visueel testen.
+            </p>
+          </details>
+        </article>
+      </div>
+
+      <div class="callout tip">
+        <span class="label">Grotere uitdagingen</span>
+        <p>
+          Wil je meer? Probeer een getegelde bitmaplaag voor diepe zoom, een
+          preview van de kleurplaat op de bibliotheekkaarten, of een remote
+          pack-manifest met download. Die staan ook in de "Volgende stappen"
+          van de README.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="waar-staat-wat">
+      <div class="chapter">Hoofdstuk 15</div>
+      <h2>Waar staat wat?</h2>
+      <p class="lead-in">
+        Een kaart van de belangrijkste bestanden. Klik op een pad om het op
+        GitHub te openen.
+      </p>
+
+      <div class="table-wrap">
+        <table class="filemap">
+          <thead>
+            <tr><th>Bestand</th><th>Wat het doet</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/MainActivity.kt" target="_blank" rel="noopener">app/…/MainActivity.kt</a></td>
+              <td>Start de Activity en zet het Compose-thema aan.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/KleurenApp.kt" target="_blank" rel="noopener">app/…/KleurenApp.kt</a></td>
+              <td>De Application: maakt één <code>AppContainer</code> voor de hele app.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/data/AppContainer.kt" target="_blank" rel="noopener">app/…/data/AppContainer.kt</a></td>
+              <td>Bezit de repositories en de generator; start het laden van de bibliotheek.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/ui/AppRoot.kt" target="_blank" rel="noopener">app/…/ui/AppRoot.kt</a></td>
+              <td>De kleine navigatiestack tussen de vier schermen.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/ui/library/LibraryScreen.kt" target="_blank" rel="noopener">app/…/ui/library/LibraryScreen.kt</a></td>
+              <td>De bibliotheek met drie tabbladen, kaarten en menus.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/ui/library/LibraryViewModel.kt" target="_blank" rel="noopener">app/…/ui/library/LibraryViewModel.kt</a></td>
+              <td>Combineert packs, voortgang, tabs en regeneratie tot één UI-state.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/ui/board/BoardScreen.kt" target="_blank" rel="noopener">app/…/ui/board/BoardScreen.kt</a></td>
+              <td>Het bordscherm: topbar, palet, zoomknoppen, reveal en delen.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/ui/board/BoardCanvas.kt" target="_blank" rel="noopener">app/…/ui/board/BoardCanvas.kt</a></td>
+              <td>Het interactieve tekenvlak: zoom, pan, tikken, hint en nummers.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/ui/board/BoardRenderer.kt" target="_blank" rel="noopener">app/…/ui/board/BoardRenderer.kt</a></td>
+              <td>Twee bitmaplagen, dirty rects, paden en de voltooide PNG.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/ui/board/BoardViewModel.kt" target="_blank" rel="noopener">app/…/ui/board/BoardViewModel.kt</a></td>
+              <td>Vullen, undo, magisch vullen, autosave en de bordstate.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/ui/photo/PhotoImportScreen.kt" target="_blank" rel="noopener">app/…/ui/photo/PhotoImportScreen.kt</a></td>
+              <td>Foto kiezen, titel en moeilijkheid instellen, genereren met voortgang.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/ui/photo/PhotoImportViewModel.kt" target="_blank" rel="noopener">app/…/ui/photo/PhotoImportViewModel.kt</a></td>
+              <td>Decodeert de foto, start de pipeline en kan annuleren.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/ui/settings/SettingsScreen.kt" target="_blank" rel="noopener">app/…/ui/settings/SettingsScreen.kt</a></td>
+              <td>Weergave, moeilijkheid, interactie, gegevens wissen en credits.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/data/PlateRepository.kt" target="_blank" rel="noopener">app/…/data/PlateRepository.kt</a></td>
+              <td>Leest het manifest, laadt platen, beheert previews en caches.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/data/ProgressRepository.kt" target="_blank" rel="noopener">app/…/data/ProgressRepository.kt</a></td>
+              <td>Leest en schrijft de voortgangsbestanden, met een schrijfwachttijd.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/data/SettingsRepository.kt" target="_blank" rel="noopener">app/…/data/SettingsRepository.kt</a></td>
+              <td>Instellingen in <code>SharedPreferences</code>, als <code>StateFlow</code>.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/data/UserPlateStore.kt" target="_blank" rel="noopener">app/…/data/UserPlateStore.kt</a></td>
+              <td>Bewaart eigen foto's, previews, bronfoto's en de index.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/data/LandscapeVariantStore.kt" target="_blank" rel="noopener">app/…/data/LandscapeVariantStore.kt</a></td>
+              <td>Bewaart lokaal aangepaste landschappen.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/app/src/main/java/nl/kleuren/app/data/PlateGenerator.kt" target="_blank" rel="noopener">app/…/data/PlateGenerator.kt</a></td>
+              <td>Maakt en hermaakt platen op de achtergrond, inclusief preview en bron.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/format/src/main/kotlin/nl/kleuren/format/Plate.kt" target="_blank" rel="noopener">format/…/Plate.kt</a></td>
+              <td>Het model: afmetingen, palet, vlakken, id-map en hit-testing.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/format/src/main/kotlin/nl/kleuren/format/PlateCodec.kt" target="_blank" rel="noopener">format/…/PlateCodec.kt</a></td>
+              <td>Leest en schrijft het binaire <code>.kplate</code>-formaat.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/pipeline/src/main/kotlin/nl/kleuren/pipeline/PhotoToPlate.kt" target="_blank" rel="noopener">pipeline/…/PhotoToPlate.kt</a></td>
+              <td>De volledige pipeline, van pixels tot <code>Plate</code>.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/pipeline/src/main/kotlin/nl/kleuren/pipeline/KMeans.kt" target="_blank" rel="noopener">pipeline/…/KMeans.kt</a></td>
+              <td>Kleuren kwantiseren en bijna gelijke kleuren samenvoegen.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/pipeline/src/main/kotlin/nl/kleuren/pipeline/RegionExtractor.kt" target="_blank" rel="noopener">pipeline/…/RegionExtractor.kt</a></td>
+              <td>Connected components, kleine vlakken samenvoegen, id-map bouwen.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/pipeline/src/main/kotlin/nl/kleuren/pipeline/ContourTracer.kt" target="_blank" rel="noopener">pipeline/…/ContourTracer.kt</a></td>
+              <td>Contouren traceren en vereenvoudigen met Douglas–Peucker.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/pipeline/src/main/kotlin/nl/kleuren/pipeline/Difficulty.kt" target="_blank" rel="noopener">pipeline/…/Difficulty.kt</a></td>
+              <td>De vijf niveaus en hun vertaling naar <code>ConvertOptions</code>.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/tools/generator/src/main/kotlin/nl/kleuren/generator/Main.kt" target="_blank" rel="noopener">tools/generator/…/Main.kt</a></td>
+              <td>De desktop-CLI: content in, platen en manifest uit.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/docs/FORMAT.md" target="_blank" rel="noopener">docs/FORMAT.md</a></td>
+              <td>De volledige specificatie van het <code>.kplate</code>-formaat.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/README.md" target="_blank" rel="noopener">README.md</a></td>
+              <td>Het projectoverzicht, de status en de snelstart.</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/plan.md" target="_blank" rel="noopener">plan.md</a></td>
+              <td>Het oorspronkelijke plan met mijlpalen, risico's en keuzes.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="verder">
+      <div class="chapter">Hoofdstuk 16</div>
+      <h2>Verder lezen</h2>
+      <p class="lead-in">
+        Je hebt de grote lijnen gehad. Wil je dieper graven? Deze documenten
+        en bronnen helpen je verder.
+      </p>
+
+      <div class="grid-2">
+        <article class="card">
+          <h3>In deze repository</h3>
+          <ul>
+            <li><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/README.md" target="_blank" rel="noopener">README.md</a> — wat er is gebouwd, status en snelstart.</li>
+            <li><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/docs/FORMAT.md" target="_blank" rel="noopener">docs/FORMAT.md</a> — alle bytes van het plaatformaat.</li>
+            <li><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/plan.md" target="_blank" rel="noopener">plan.md</a> — het oorspronkelijke ontwerp en de mijlpalen.</li>
+            <li><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/content/CREDITS.md" target="_blank" rel="noopener">content/CREDITS.md</a> — de fotografen en licenties.</li>
+            <li><a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a> — de MIT-licentie van de code.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Externe bronnen</h3>
+          <ul>
+            <li><a href="https://kotlinlang.org/docs/home.html" target="_blank" rel="noopener">Kotlin-documentatie</a> — de taal zelf.</li>
+            <li><a href="https://developer.android.com/jetpack/compose" target="_blank" rel="noopener">Jetpack Compose</a> — de UI-toolkit.</li>
+            <li><a href="https://developer.android.com/training/data-storage/shared/photopicker" target="_blank" rel="noopener">Android Photo Picker</a> — hoe de fotokiezer werkt.</li>
+            <li><a href="https://en.wikipedia.org/wiki/K-means_clustering" target="_blank" rel="noopener">K-means</a> — de wiskunde achter de kleuren.</li>
+            <li><a href="https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm" target="_blank" rel="noopener">Douglas–Peucker</a> — de wiskunde achter de contouren.</li>
+          </ul>
+        </article>
+      </div>
+
+      <h3>De status in het kort</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Fase</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0 – Setup</td><td>✅ Gradle, Compose, thema, CI-workflow klaar</td></tr>
+            <tr><td>1 – Render-prototype</td><td>✅ decoder, Canvas-engine, bitmaplagen, zoom/pan, vullen, undo</td></tr>
+            <tr><td>2 – Pijplijn + content</td><td>✅ generator-CLI, 10 platen, QA-test</td></tr>
+            <tr><td>3 – App-UI</td><td>✅ bibliotheek, voortgang, instellingen, voltooien/delen, hints</td></tr>
+            <tr><td>4 – Eigen foto's</td><td>✅ on-device segmentatie + Photo Picker</td></tr>
+            <tr><td>5 – Polish</td><td>🟡 thema's, haptics, kleurblind-modus, reveal; geluid/onboarding nog niet</td></tr>
+            <tr><td>6 – Optimalisatie/release</td><td>⬜ Perfetto op A54, Play Console, privacybeleid</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout plain">
+        <span class="label">Over dit codeboek</span>
+        <p>
+          Dit codeboek is één zelfstandig HTML-bestand. De CSS en JavaScript
+          zitten erin; er zijn geen externe bibliotheken of webfonts nodig. Het
+          werkt offline, heeft een licht en donker thema, een doorzoekbaar
+          woordenboek en is printbaar. De inhoud is gebaseerd op de code en de
+          documentatie in de repository, met de bron als waarheid.
+        </p>
+      </div>
+
+      <div class="callout tip">
+        <span class="label">Iets gevonden dat niet klopt?</span>
+        <p>
+          Open een issue of pull request op
+          <a href="https://github.com/simondewaal1980/kleurenpuzzle" target="_blank" rel="noopener">GitHub</a>.
+          Dit is een leerproject: verbeteringen aan de uitleg zijn net zo
+          welkom als verbeteringen aan de code.
+        </p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <p><strong>Codeboek Kleuren</strong> — geschreven voor beginners, met de code als bron van waarheid.</p>
+      <p>App-code: MIT · Foto's: CC0 · Gemaakt als leerproject.</p>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/simondewaal1980/kleurenpuzzle">GitHub</a>
+      <a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/README.md">README</a>
+      <a href="https://github.com/simondewaal1980/kleurenpuzzle/blob/main/docs/FORMAT.md">Formaatspecificatie</a>
+      <a href="#top">Naar boven ↑</a>
+    </div>
+  </div>
+</footer>
+
+<button class="to-top" id="to-top" type="button" aria-label="Naar boven">↑</button>
+
+<script>
+(function () {
+  "use strict";
+
+  var root = document.documentElement;
+  var themeButton = document.getElementById("theme-toggle");
+  var themeLabel = themeButton ? themeButton.querySelector(".theme-label") : null;
+  var themeIcon = themeButton ? themeButton.querySelector(".theme-icon") : null;
+
+  function applyTheme(theme, persist) {
+    root.setAttribute("data-theme", theme);
+    if (themeButton) {
+      var dark = theme === "dark";
+      themeButton.setAttribute("aria-pressed", dark ? "true" : "false");
+      themeButton.setAttribute("aria-label", dark ? "Schakel naar licht thema" : "Schakel naar donker thema");
+      if (themeLabel) themeLabel.textContent = dark ? "Licht" : "Donker";
+      if (themeIcon) themeIcon.textContent = dark ? "☀" : "◐";
+    }
+    if (persist) {
+      try { localStorage.setItem("kleuren-codeboek-theme", theme); } catch (e) {}
+    }
+  }
+
+  var storedTheme = null;
+  try { storedTheme = localStorage.getItem("kleuren-codeboek-theme"); } catch (e) {}
+  try {
+    var urlTheme = new URLSearchParams(window.location.search).get("theme");
+    if (urlTheme === "dark" || urlTheme === "light") storedTheme = urlTheme;
+  } catch (e) {}
+  var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme(storedTheme || (prefersDark ? "dark" : "light"), false);
+
+  if (themeButton) {
+    themeButton.addEventListener("click", function () {
+      applyTheme(root.getAttribute("data-theme") === "dark" ? "light" : "dark", true);
+    });
+  }
+
+  /* ---------- Mobiel menu ---------- */
+
+  var menuButton = document.getElementById("menu-toggle");
+  var backdrop = document.getElementById("nav-backdrop");
+  var sidebar = document.getElementById("sidebar");
+
+  function setNav(open) {
+    document.body.classList.toggle("nav-open", open);
+    if (menuButton) menuButton.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  if (menuButton) {
+    menuButton.addEventListener("click", function () {
+      setNav(!document.body.classList.contains("nav-open"));
+    });
+  }
+  if (backdrop) backdrop.addEventListener("click", function () { setNav(false); });
+  if (sidebar) {
+    sidebar.addEventListener("click", function (event) {
+      if (event.target.closest("a")) setNav(false);
+    });
+  }
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") setNav(false);
+  });
+
+  /* ---------- Scrollvoortgang en actieve inhoud ---------- */
+
+  var scrollbar = document.getElementById("scrollbar");
+  var toTop = document.getElementById("to-top");
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll(".toc a[href^='#']"));
+  var tocTargets = tocLinks.map(function (link) {
+    return { link: link, el: document.querySelector(link.getAttribute("href")) };
+  }).filter(function (item) { return item.el; });
+
+  function onScroll() {
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+    if (scrollbar) scrollbar.style.width = (progress * 100).toFixed(2) + "%";
+    if (toTop) toTop.classList.toggle("visible", window.scrollY > 700);
+
+    var active = null;
+    for (var i = 0; i < tocTargets.length; i++) {
+      if (tocTargets[i].el.getBoundingClientRect().top <= 130) active = tocTargets[i];
+    }
+    tocLinks.forEach(function (link) { link.classList.remove("active"); });
+    if (active) active.link.classList.add("active");
+  }
+
+  var ticking = false;
+  window.addEventListener("scroll", function () {
+    if (!ticking) {
+      ticking = true;
+      window.requestAnimationFrame(function () {
+        onScroll();
+        ticking = false;
+      });
+    }
+  }, { passive: true });
+  window.addEventListener("resize", onScroll);
+  onScroll();
+
+  if (toTop) {
+    toTop.addEventListener("click", function () {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  /* ---------- Paden netjes laten afbreken ---------- */
+
+  Array.prototype.forEach.call(document.querySelectorAll("code:not(pre code)"), function (code) {
+    if (code.children.length > 0) return;
+    var text = code.textContent;
+    if (text.indexOf("/") === -1) return;
+    code.textContent = "";
+    var parts = text.split("/");
+    parts.forEach(function (part, index) {
+      code.appendChild(document.createTextNode(part));
+      if (index < parts.length - 1) {
+        code.appendChild(document.createTextNode("/"));
+        code.appendChild(document.createElement("wbr"));
+      }
+    });
+  });
+
+  /* ---------- Kopieerknoppen ---------- */
+
+  Array.prototype.forEach.call(document.querySelectorAll(".codeblock"), function (block) {
+    var button = block.querySelector(".copy-btn");
+    var code = block.querySelector("pre");
+    if (!button || !code) return;
+
+    button.addEventListener("click", function () {
+      var text = code.innerText;
+      function done() {
+        var old = button.textContent;
+        button.textContent = "Gekopieerd";
+        window.setTimeout(function () { button.textContent = old; }, 1600);
+      }
+      function fallback() {
+        var area = document.createElement("textarea");
+        area.value = text;
+        area.setAttribute("readonly", "");
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+        document.body.appendChild(area);
+        area.select();
+        try { document.execCommand("copy"); done(); } catch (e) {}
+        document.body.removeChild(area);
+      }
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else {
+        fallback();
+      }
+    });
+  });
+
+  /* ---------- Woordenboek filter ---------- */
+
+  var search = document.getElementById("glossary-search");
+  var terms = Array.prototype.slice.call(document.querySelectorAll(".term"));
+  var count = document.getElementById("glossary-count");
+  var empty = document.getElementById("glossary-empty");
+
+  function filterTerms() {
+    var query = search ? search.value.trim().toLowerCase() : "";
+    var visible = 0;
+    terms.forEach(function (term) {
+      var haystack = (term.getAttribute("data-term") || "") + " " + term.textContent.toLowerCase();
+      var match = !query || haystack.indexOf(query) !== -1;
+      term.hidden = !match;
+      if (match) visible++;
+    });
+    if (count) {
+      count.textContent = query
+        ? visible + " van " + terms.length + " begrippen gevonden"
+        : terms.length + " begrippen";
+    }
+    if (empty) empty.hidden = visible !== 0;
+  }
+
+  if (search) {
+    search.addEventListener("input", filterTerms);
+    filterTerms();
+  }
+
+  /* ---------- Jaartal in de footer ---------- */
+
+  var year = document.getElementById("year");
+  if (year) year.textContent = String(new Date().getFullYear());
+
+  /* ---------- Direct naar een hoofdstuk bij het openen ---------- */
+
+  if (window.location.hash) {
+    var targetId = window.location.hash.slice(1);
+    var target = document.getElementById(targetId);
+    if (target) {
+      window.setTimeout(function () {
+        target.scrollIntoView({ block: "start" });
+      }, 120);
+    }
+  }
+})();
+</script>
+</body>
+</html>

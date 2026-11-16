@@ -1,5 +1,8 @@
 # Het `.kplate`-formaat (versie 1)
 
+> Voor een beginnersvriendelijke uitleg van de code en het formaat, zie
+> [codeboek.html](codeboek.html).
+
 Een `.kplate`-bestand is één compact binair bestand per kleurplaat. Alle getallen
 zijn **big-endian**. De payload is gecomprimeerd met zlib (RFC 1950), zodat de
 id-map en de paden klein blijven.

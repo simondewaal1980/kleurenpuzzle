@@ -9,6 +9,15 @@ voorzien van Nederlandse uitleg in de comments. Zo kun je als beginnend Android-
 developer zien hoe een complete app in elkaar zit: van binaire bestandsformaten en
 fotosegmentatie tot Compose-UI, Canvas-rendering en opslag.
 
+## Codeboek
+
+Wil je de code leren begrijpen? Het **[codeboek](docs/codeboek.html)** is een
+beginnersvriendelijke rondleiding door het hele project: van de eerste pixel tot
+het kleurbord, met uitleg in gewone taal, codefragmenten, een woordenboek en
+oefeningen. Het is één zelfstandig HTML-bestand (met CSS en JavaScript) dat ook
+offline werkt. Online lezen kan via
+[GitHub Pages](https://simondewaal1980.github.io/kleurenpuzzle/codeboek.html).
+
 | Bibliotheek | Kleurbord | Voltooid |
 |---|---|---|
 | ![Bibliotheek](docs/screenshot-bibliotheek.jpg) | ![Kleurbord](docs/screenshot-kleurbord.jpg) | ![Voltooid](docs/screenshot-voltooid.jpg) |
@@ -133,7 +142,7 @@ format/                  .kplate encoder/decoder (pure Kotlin, unit tested)
 pipeline/                foto -> kleurplaat (pure Kotlin, unit tested)
 tools/generator/         desktop-CLI om content te maken
 content/                 bronfoto's, content.json en CREDITS.md
-docs/                    screenshots en formaatdocumentatie
+docs/                    screenshots, formaatdocumentatie en codeboek
 ```
 
 De modules `:format` en `:pipeline` hebben **geen Android-afhankelijkheden**. Daardoor
