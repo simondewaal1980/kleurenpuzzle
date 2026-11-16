@@ -38,6 +38,11 @@ data class PlateSummary(
     val difficulty: Difficulty? = null,
     /** Alleen bij meegeleverde landschappen: bronfoto in de assets. */
     val sourceAsset: String? = null,
+    /**
+     * Versie van de plaat. Verandert bij opnieuw genereren of herstellen,
+     * zodat een geopend bord kan merken dat het de plaat opnieuw moet laden.
+     */
+    val revision: Long = 0L,
 )
 
 /** Een pack is een groep landschappen, bijvoorbeeld "Alpen & Meren". */

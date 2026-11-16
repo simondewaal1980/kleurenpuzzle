@@ -70,4 +70,9 @@ data class UserPlateEntry(
     val sourceFile: String = "",
     /** Naam van het gebruikte [nl.kleuren.pipeline.Difficulty]-niveau. */
     val difficulty: String = "",
+    /**
+     * Moment waarop de plaat voor het laatst opnieuw is gemaakt. Het bord
+     * gebruikt dit om te merken dat de plaat is gewijzigd.
+     */
+    val updatedAt: Long = 0L,
 )

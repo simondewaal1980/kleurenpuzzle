@@ -56,6 +56,7 @@ class UserPlateStore(context: Context) {
             val plateFile = File(directory, "$id.kplate")
             val previewFile = File(directory, "$id.jpg")
             val sourceFile = File(directory, "$id-source.jpg")
+            val now = System.currentTimeMillis()
             val entry = UserPlateEntry(
                 id = id,
                 title = title.ifBlank { "Mijn foto" },
@@ -63,9 +64,10 @@ class UserPlateStore(context: Context) {
                 previewFile = previewFile.name,
                 regionCount = plate.regionCount,
                 paletteSize = plate.palette.size,
-                createdAt = System.currentTimeMillis(),
+                createdAt = now,
                 sourceFile = sourceFile.name,
                 difficulty = difficulty.name,
+                updatedAt = now,
             )
 
             try {
@@ -104,6 +106,7 @@ class UserPlateStore(context: Context) {
                 regionCount = plate.regionCount,
                 paletteSize = plate.palette.size,
                 difficulty = difficulty.name,
+                updatedAt = System.currentTimeMillis(),
             )
 
             PlateCodec.write(plate.withPreviewJpeg(previewBytes), plateFile)

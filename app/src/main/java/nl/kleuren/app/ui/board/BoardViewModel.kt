@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import nl.kleuren.app.data.AppContainer
 import nl.kleuren.app.data.PlateRepository
+import nl.kleuren.app.data.PlateSummary
 import nl.kleuren.app.data.ProgressRepository
 import nl.kleuren.app.data.SettingsRepository
 import nl.kleuren.format.Plate
@@ -82,6 +83,10 @@ class BoardViewModel(
     @Volatile
     private var loaded = false
 
+    /** Versie van de plaat die nu op het bord staat. */
+    @Volatile
+    private var loadedRevision: Long? = null
+
     init {
         // Instellingen kunnen tijdens het bord wijzigen (bijv. via de
         // instellingen of de hint-knop). We volgen ze live.
@@ -104,50 +109,38 @@ class BoardViewModel(
         }
 
         viewModelScope.launch {
-            try {
-                // Wacht tot de bibliotheek geladen is. Nodig als dit scherm
-                // direct na het opstarten (of na procesherstel) opent.
-                val library = plateRepository.state.filter { !it.loading }.first()
-                val summary = library.packs.asSequence()
-                    .flatMap { it.plates.asSequence() }
-                    .firstOrNull { it.id == plateId }
-                    ?: run {
-                        _state.update {
-                            it.copy(
-                                loading = false,
-                                error = "Deze kleurplaat is niet gevonden.",
-                            )
-                        }
-                        return@launch
-                    }
-
-                val plate = plateRepository.loadPlate(summary)
-                val saved = progressRepository.filledRegions(plateId)
-                    .filter { plate.regionById(it) != null }
-                    .toSet()
-                progressRepository.markOpened(plateId)
-
-                val completed = saved.size >= plate.regionCount
-                loaded = true
-                _state.update { current ->
-                    current.copy(
-                        loading = false,
-                        error = null,
-                        title = summary.title,
-                        subtitle = summary.subtitle,
-                        credit = summary.credit,
-                        plate = plate,
-                        filled = saved,
-                        selectedColor = firstUnfilledColor(plate, saved),
-                        completed = completed,
-                    )
-                }
-            } catch (e: Exception) {
+            // Wacht tot de bibliotheek geladen is. Nodig als dit scherm
+            // direct na het opstarten (of na procesherstel) opent.
+            val library = plateRepository.state.filter { !it.loading }.first()
+            val summary = library.packs.asSequence()
+                .flatMap { it.plates.asSequence() }
+                .firstOrNull { it.id == plateId }
+            if (summary == null) {
                 _state.update {
                     it.copy(
                         loading = false,
-                        error = "De kleurplaat kon niet worden geopend: ${e.message}",
+                        error = "Deze kleurplaat is niet gevonden.",
                     )
+                }
+                return@launch
+            }
+            load(summary)
+        }
+
+        // De plaat kan buiten dit bord om opnieuw zijn gemaakt, bijvoorbeeld
+        // met een andere moeilijkheid. Het ViewModel blijft in leven zolang de
+        // Activity bestaat; zonder deze controle bleef het oude bord staan tot
+        // de app opnieuw werd gestart.
+        viewModelScope.launch {
+            plateRepository.state.collect { library ->
+                if (library.loading) return@collect
+                val summary = library.packs.asSequence()
+                    .flatMap { it.plates.asSequence() }
+                    .firstOrNull { it.id == plateId }
+                    ?: return@collect
+                val knownRevision = loadedRevision ?: return@collect
+                if (summary.revision != knownRevision) {
+                    load(summary)
                 }
             }
         }
@@ -173,6 +166,56 @@ class BoardViewModel(
                         )
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Laadt de plaat en de bewaarde voortgang (opnieuw). Wordt gebruikt bij
+     * het openen en wanneer de plaat buiten dit bord om is gewijzigd.
+     */
+    private suspend fun load(summary: PlateSummary) {
+        loaded = false
+        undoStack.clear()
+        _state.update {
+            it.copy(
+                loading = true,
+                error = null,
+                message = null,
+                undoDepth = 0,
+            )
+        }
+
+        try {
+            val plate = plateRepository.loadPlate(summary)
+            val saved = progressRepository.filledRegions(plateId)
+                .filter { plate.regionById(it) != null }
+                .toSet()
+            progressRepository.markOpened(plateId)
+
+            val completed = saved.size >= plate.regionCount
+            loadedRevision = summary.revision
+            loaded = true
+            _state.update { current ->
+                current.copy(
+                    loading = false,
+                    error = null,
+                    title = summary.title,
+                    subtitle = summary.subtitle,
+                    credit = summary.credit,
+                    plate = plate,
+                    filled = saved,
+                    selectedColor = firstUnfilledColor(plate, saved),
+                    completed = completed,
+                    undoDepth = 0,
+                )
+            }
+        } catch (e: Exception) {
+            _state.update {
+                it.copy(
+                    loading = false,
+                    error = "De kleurplaat kon niet worden geopend: ${e.message}",
+                )
             }
         }
     }

@@ -92,6 +92,7 @@ class PlateRepository(
                             sourceUrl = plate.sourceUrl,
                             difficulty = difficulty,
                             sourceAsset = plate.source.takeIf { it.isNotBlank() },
+                            revision = variant?.updatedAt ?: 0L,
                         )
                     },
                 )
@@ -123,6 +124,7 @@ class PlateRepository(
                             isUserPlate = true,
                             createdAt = entry.createdAt,
                             difficulty = difficulty,
+                            revision = entry.updatedAt,
                         )
                     },
                 )

@@ -36,6 +36,7 @@ class UserPlateIndexTest {
 
         assertEquals("", entry.sourceFile)
         assertEquals("", entry.difficulty)
+        assertEquals(0L, entry.updatedAt)
     }
 
     @Test
@@ -52,6 +53,7 @@ class UserPlateIndexTest {
                     createdAt = 456,
                     sourceFile = "user-2-source.jpg",
                     difficulty = "HARD",
+                    updatedAt = 789,
                 ),
             ),
         )
@@ -61,5 +63,6 @@ class UserPlateIndexTest {
 
         assertEquals("user-2-source.jpg", decoded.plates.single().sourceFile)
         assertEquals("HARD", decoded.plates.single().difficulty)
+        assertEquals(789L, decoded.plates.single().updatedAt)
     }
 }
