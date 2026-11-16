@@ -30,6 +30,10 @@ fotosegmentatie tot Compose-UI, Canvas-rendering en opslag.
   Bestaande eigen foto's kun je via het kaartmenu opnieuw maken met een ander
   niveau; de bronfoto blijft daarvoor lokaal bewaard. Geen upload, geen
   toestemmingen.
+- **Moeilijkheid van landschappen**: ook de tien meegeleverde landschappen
+  kunnen via het kaartmenu opnieuw worden gegenereerd met een van de vijf
+  niveaus. De app gebruikt daarvoor de meegeleverde bronfoto's; het origineel
+  blijft beschikbaar via "Herstel origineel".
 - **Bibliotheek** met drie tabbladen: Landschappen, Verder gaan en Mijn foto's.
   Voortgang en voltooiing zijn direct zichtbaar.
 - **Instellingen**: nummers aan/uit, hint-modus, kleurblind-modus, haptics,
@@ -57,10 +61,10 @@ fotosegmentatie tot Compose-UI, Canvas-rendering en opslag.
 
 | Plan | In deze repo |
 |---|---|
-| 3.1 moeilijkheid | `ConvertOptions` (12–20 kleuren, streefband 300–800) + `Difficulty` met vijf niveaus voor eigen foto's |
+| 3.1 moeilijkheid | `ConvertOptions` (12–20 kleuren, streefband 300–800) + `Difficulty` met vijf niveaus voor eigen foto's én landschappen |
 | 3.2 plaatformaat | `format/` + [docs/FORMAT.md](docs/FORMAT.md); id-map voor hit-testing; preview-JPEG |
 | 4 segmentatiepijplijn | `pipeline/`: downscalen, smoothing, k-means, kleine vlakken mergen, contouren + DP |
-| 5.1 bibliotheek | `ui/library/`: packs, Verder gaan, Mijn foto's, voortgang, verwijderen |
+| 5.1 bibliotheek | `ui/library/`: packs, Verder gaan, Mijn foto's, voortgang, moeilijkheid aanpassen, verwijderen |
 | 5.2 kleurbord | `ui/board/`: zoom/pan, palet, hint, magisch vullen, undo, autosave, reveal, delen |
 | 5.3 foto toevoegen | `ui/photo/`: Photo Picker + on-device pipeline + voortgang/annuleren |
 | 5.4 instellingen | `ui/settings/`: nummers, hints, kleurblind, haptics, thema, moeilijkheidsgraad, data wissen |
@@ -117,7 +121,7 @@ adb shell am start -n nl.kleuren.app/.MainActivity
 
 ```
 app/                     De Android-app (Compose, ViewModels, repos)
-  src/main/assets/       manifest.json, .kplate-bestanden en previews
+  src/main/assets/       manifest.json, .kplate-bestanden, previews en bronfoto's
   src/main/java/nl/kleuren/app/
     data/                Room-loze opslag, manifest, instellingen
     ui/board/            bord-UI, renderer, zoom/pan, delen
@@ -191,8 +195,12 @@ Voortgang is per plaat een klein binair bestandje (`files/progress/<id>.bin`) me
 alleen de gevulde regio-ids. Eigen foto's staan in `files/myplates/` met een
 `index.json`, de `.kplate`, een bibliotheekpreview en de bronfoto
 (`<id>-source.jpg`, max. 1600 px). Die bronfoto wordt gebruikt als je de
-moeilijkheid van een bestaande foto later aanpast. Instellingen staan in
-`SharedPreferences`.
+moeilijkheid van een bestaande foto later aanpast.
+
+Aangepaste landschappen staan in `files/landscape-variants/` met een
+`index.json` en één `.kplate` per landschap. De originele platen en bronfoto's
+blijven in de APK-assets staan; "Herstel origineel" verwijdert de lokale
+variant. Instellingen staan in `SharedPreferences`.
 
 Het plan noemde Room en DataStore. Voor deze hoeveelheid data is dat overkill:
 het zou code-generatie (KSP) en extra afhankelijkheden toevoegen zonder voordeel.
@@ -211,6 +219,7 @@ De generator schrijft:
 
 - `app/src/main/assets/plates/<id>.kplate`
 - `app/src/main/assets/previews/<id>.jpg`
+- `app/src/main/assets/sources/<id>.jpg` (bronfoto, max. 1200 px)
 - `app/src/main/assets/plates/manifest.json`
 - `content/CREDITS.md`
 
@@ -231,13 +240,17 @@ Elk niveau vertaalt zich naar `ConvertOptions`:
 | Moeilijk | 17 | 450–800 | 0,03% | 1,4 px |
 | Zeer moeilijk | 20 | 600–800 | 0,02% | 1,2 px |
 
-"Normaal" is exact gelijk aan `ConvertOptions()` en dus aan de vaste moeilijkheid
-van de meegeleverde landschappen. De instellingen kiezen de standaard voor nieuwe
-eigen foto's; op het fotoscherm kan de gebruiker per foto afwijken. Bij een
-bestaande eigen foto opent "Moeilijkheid aanpassen" in het kaartmenu dezelfde
-vijf keuzes; de plaat wordt dan opnieuw gegenereerd en de oude voortgang wordt
-gewist. Foto's van vóór deze functie hebben nog geen opgeslagen bronfoto; voor
-hen gebruikt de app de bibliotheekpreview als bron.
+"Normaal" is exact gelijk aan `ConvertOptions()`. De instellingen kiezen de
+standaard voor nieuwe eigen foto's; op het fotoscherm kan de gebruiker per foto
+afwijken. Bij een bestaande eigen foto of een meegeleverd landschap opent
+"Moeilijkheid aanpassen" in het kaartmenu dezelfde vijf keuzes; de plaat wordt
+dan opnieuw gegenereerd en de oude voortgang wordt gewist.
+
+Voor eigen foto's komt de bron uit `files/myplates/`; voor landschappen uit de
+meegeleverde `assets/sources/` (max. 1200 px). Een aangepast landschap wordt
+lokaal bewaard en kan via "Herstel origineel" terug naar de originele plaat.
+Foto's van vóór deze functie hebben nog geen opgeslagen bronfoto; voor hen
+gebruikt de app de bibliotheekpreview als bron.
 
 De onderliggende parameters in `pipeline/src/main/kotlin/nl/kleuren/pipeline/ConvertOptions.kt`:
 

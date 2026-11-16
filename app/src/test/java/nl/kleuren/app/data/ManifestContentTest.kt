@@ -56,6 +56,15 @@ class ManifestContentTest {
                     plate.palette.size in 12..20,
                 )
                 assertTrue("${entry.id} heeft geen preview", plate.previewJpeg.isNotEmpty())
+                assertTrue(
+                    "${entry.id} heeft geen bronfoto voor het aanpassen van de moeilijkheid",
+                    entry.source.isNotBlank(),
+                )
+                val sourceFile = File("src/main/assets/${entry.source}")
+                assertTrue(
+                    "Bronfoto ontbreekt voor ${entry.id}: ${sourceFile.path}",
+                    sourceFile.isFile,
+                )
                 assertEquals(
                     "${entry.id}: id-mapgrootte klopt niet",
                     plate.idMapWidth * plate.idMapHeight,

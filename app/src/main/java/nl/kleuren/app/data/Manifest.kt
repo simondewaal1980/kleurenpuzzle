@@ -36,6 +36,11 @@ data class ManifestPlate(
     val credit: String = "",
     val license: String = "",
     val sourceUrl: String = "",
+    /**
+     * Optionele bronfoto in de assets. Hiermee kan de app een landschap op het
+     * toestel opnieuw genereren met een andere moeilijkheidsgraad.
+     */
+    val source: String = "",
 )
 
 /**

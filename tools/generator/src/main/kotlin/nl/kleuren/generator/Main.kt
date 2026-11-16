@@ -57,8 +57,10 @@ fun main(args: Array<String>) {
     val config = json.decodeFromString<ContentConfig>(configFile.readText())
     val platesDir = File(outputDir, "plates")
     val previewDir = File(outputDir, "previews")
+    val sourceDir = File(outputDir, "sources")
     platesDir.mkdirs()
     previewDir.mkdirs()
+    sourceDir.mkdirs()
 
     println("Kleuren-generator")
     println("Config: ${configFile.path}")
@@ -118,11 +120,13 @@ fun main(args: Array<String>) {
                 true
             }
 
-            val preview = encodeJpegPreview(image, maxWidth = 560, quality = 0.85f)
+            val preview = encodeJpeg(image, maxSide = 560, quality = 0.85f)
+            val source = encodeJpeg(image, maxSide = 1200, quality = 0.88f)
             val finishedPlate = plate.withPreviewJpeg(preview)
             val plateFile = File(platesDir, "${plateConfig.id}.kplate")
             PlateCodec.write(finishedPlate, plateFile)
             File(previewDir, "${plateConfig.id}.jpg").writeBytes(preview)
+            File(sourceDir, "${plateConfig.id}.jpg").writeBytes(source)
 
             val seconds = (System.currentTimeMillis() - started) / 1000.0
             totalBytes += plateFile.length()
@@ -153,6 +157,7 @@ fun main(args: Array<String>) {
                 credit = plateConfig.credit,
                 license = plateConfig.license,
                 sourceUrl = plateConfig.sourceUrl,
+                source = "sources/${plateConfig.id}.jpg",
             )
         }
         manifestPacks += ManifestPack(
@@ -187,6 +192,7 @@ fun main(args: Array<String>) {
                                 put("credit", plate.credit)
                                 put("license", plate.license)
                                 put("sourceUrl", plate.sourceUrl)
+                                put("source", plate.source)
                             })
                         }
                     }
@@ -205,11 +211,13 @@ fun main(args: Array<String>) {
 }
 
 /**
- * Maakt een verkleinde JPEG voor de bibliotheekkaarten.
- * [quality] 0..1: hoger = mooier en groter.
+ * Maakt een verkleinde JPEG met [maxSide] als langste zijde.
+ * [quality] 0..1: hoger = mooier en groter. Wordt gebruikt voor zowel de
+ * bibliotheekpreview (560 px) als de bronfoto in de assets (1200 px, gelijk
+ * aan de maximale zijde van de pijplijn).
  */
-private fun encodeJpegPreview(image: BufferedImage, maxWidth: Int, quality: Float): ByteArray {
-    val scale = minOf(1.0, maxWidth.toDouble() / image.width)
+private fun encodeJpeg(image: BufferedImage, maxSide: Int, quality: Float): ByteArray {
+    val scale = minOf(1.0, maxSide.toDouble() / maxOf(image.width, image.height))
     val targetWidth = (image.width * scale).roundToInt().coerceAtLeast(1)
     val targetHeight = (image.height * scale).roundToInt().coerceAtLeast(1)
     val target = BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB)
@@ -305,4 +313,5 @@ private data class ManifestPlate(
     val credit: String,
     val license: String,
     val sourceUrl: String,
+    val source: String,
 )

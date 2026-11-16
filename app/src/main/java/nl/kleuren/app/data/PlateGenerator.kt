@@ -1,5 +1,6 @@
 package nl.kleuren.app.data
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import kotlinx.coroutines.Dispatchers
@@ -18,16 +19,19 @@ import kotlin.math.roundToInt
  * met een andere moeilijkheidsgraad.
  *
  * Zowel de importflow als "Moeilijkheid aanpassen" in de bibliotheek gebruiken
- * deze klasse. Daardoor zijn de pijplijn, de previews en de opslag op één plek
- * geregeld en blijven nieuwe en bestaande foto's hetzelfde werken.
+ * deze klasse. Voor eigen foto's komt de bron uit de interne opslag; voor
+ * meegeleverde landschappen uit een bronfoto in de assets.
  */
-class UserPlateGenerator(
+class PlateGenerator(
+    context: Context,
     private val userPlateStore: UserPlateStore,
+    private val landscapeVariantStore: LandscapeVariantStore,
     private val plateRepository: PlateRepository,
 ) {
+    private val appContext = context.applicationContext
 
     /**
-     * Genereert een nieuwe plaat en bewaart de bronfoto. De bitmap blijft
+     * Genereert een nieuwe eigen plaat en bewaart de bronfoto. De bitmap blijft
      * eigendom van de aanroeper; wij recyclen hem niet.
      */
     suspend fun create(
@@ -87,6 +91,42 @@ class UserPlateGenerator(
         } finally {
             bitmap.recycle()
         }
+    }
+
+    /**
+     * Maakt een meegeleverd landschap opnieuw met [difficulty]. De variant
+     * wordt lokaal bewaard; de originele asset blijft onaangeroerd.
+     */
+    suspend fun regenerateLandscape(
+        summary: PlateSummary,
+        difficulty: Difficulty,
+        onProgress: (ConversionProgress) -> Boolean = { true },
+    ): LandscapeVariantEntry {
+        val sourceAsset = summary.sourceAsset
+            ?: error("De bronfoto van dit landschap is niet meegeleverd.")
+        val source = withContext(Dispatchers.IO) {
+            appContext.assets.open(sourceAsset).use { it.readBytes() }
+        }
+        val bitmap = withContext(Dispatchers.IO) { decodeSource(source) }
+
+        try {
+            val plate = withContext(Dispatchers.Default) {
+                generate(bitmap, difficulty, onProgress)
+            }
+            val entry = landscapeVariantStore.save(summary.id, plate, difficulty)
+            plateRepository.invalidatePlate(summary.id)
+            plateRepository.refresh()
+            return entry
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
+    /** Verwijdert de aangepaste variant van een landschap. */
+    suspend fun restoreLandscape(plateId: String) {
+        landscapeVariantStore.delete(plateId)
+        plateRepository.invalidatePlate(plateId)
+        plateRepository.refresh()
     }
 
     private fun generate(

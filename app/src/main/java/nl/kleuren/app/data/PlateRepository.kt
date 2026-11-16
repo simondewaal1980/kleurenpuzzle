@@ -36,6 +36,7 @@ data class LibraryState(
 class PlateRepository(
     context: Context,
     private val userPlateStore: UserPlateStore,
+    private val landscapeVariantStore: LandscapeVariantStore,
 ) {
     private val appContext = context.applicationContext
     private val assets = appContext.assets
@@ -55,6 +56,7 @@ class PlateRepository(
         try {
             val manifest = readManifest()
             val userEntries = userPlateStore.entries()
+            val landscapeVariants = landscapeVariantStore.entries()
 
             val packs = manifest.packs.map { pack ->
                 PackSummary(
@@ -62,19 +64,34 @@ class PlateRepository(
                     title = pack.title,
                     description = pack.description,
                     plates = pack.plates.map { plate ->
+                        val variant = landscapeVariants[plate.id]
+                            ?.takeIf { landscapeVariantStore.file(it).isFile }
+                        val difficulty = variant?.difficulty
+                            ?.takeIf { it.isNotBlank() }
+                            ?.let(Difficulty::fromStorage)
                         PlateSummary(
                             id = plate.id,
                             title = plate.title,
-                            subtitle = plate.subtitle,
+                            subtitle = if (difficulty != null) {
+                                "${plate.subtitle} · ${difficulty.label}"
+                            } else {
+                                plate.subtitle
+                            },
                             packId = pack.id,
                             packTitle = pack.title,
-                            plateSource = ContentSource.Asset(plate.asset),
+                            plateSource = if (variant != null) {
+                                ContentSource.LocalFile(landscapeVariantStore.file(variant))
+                            } else {
+                                ContentSource.Asset(plate.asset)
+                            },
                             previewSource = ContentSource.Asset(plate.preview),
-                            regionCount = plate.regionCount,
-                            paletteSize = plate.paletteSize,
+                            regionCount = variant?.regionCount ?: plate.regionCount,
+                            paletteSize = variant?.paletteSize ?: plate.paletteSize,
                             credit = plate.credit,
                             license = plate.license,
                             sourceUrl = plate.sourceUrl,
+                            difficulty = difficulty,
+                            sourceAsset = plate.source.takeIf { it.isNotBlank() },
                         )
                     },
                 )
@@ -168,6 +185,13 @@ class PlateRepository(
         userPlateStore.clear()
         plateCache.evictAll()
         previewCache.evictAll()
+        refresh()
+    }
+
+    /** Zet alle meegeleverde landschappen terug naar hun originele variant. */
+    suspend fun clearLandscapeVariants() = withContext(Dispatchers.IO) {
+        landscapeVariantStore.clear()
+        plateCache.evictAll()
         refresh()
     }
 

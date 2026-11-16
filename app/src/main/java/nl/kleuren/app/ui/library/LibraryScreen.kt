@@ -147,8 +147,11 @@ fun LibraryScreen(
                     LibraryTab.LANDSCAPES -> LandscapesTab(
                         packs = state.packs,
                         plateRepository = container.plateRepository,
+                        defaultDifficulty = settings.difficulty,
                         onOpenPlate = onOpenPlate,
                         onGoToPhotos = onAddPhoto,
+                        onRegenerate = viewModel::regeneratePlate,
+                        onRestore = viewModel::restoreLandscape,
                     )
                     LibraryTab.CONTINUE -> ContinueTab(
                         items = state.continueItems,
@@ -163,7 +166,7 @@ fun LibraryScreen(
                         onOpenPlate = onOpenPlate,
                         onAddPhoto = onAddPhoto,
                         onDelete = viewModel::deleteUserPlate,
-                        onRegenerate = viewModel::regenerateUserPlate,
+                        onRegenerate = viewModel::regeneratePlate,
                     )
                 }
             }
@@ -173,7 +176,7 @@ fun LibraryScreen(
     if (state.regeneratingPlateId != null) {
         AlertDialog(
             onDismissRequest = {},
-            title = { Text("Foto opnieuw maken") },
+            title = { Text("Plaat opnieuw maken") },
             text = {
                 Column {
                     LinearProgressIndicator(
@@ -290,8 +293,11 @@ private val LibraryTab.iconRes: Int
 private fun LandscapesTab(
     packs: List<PackUi>,
     plateRepository: PlateRepository,
+    defaultDifficulty: Difficulty,
     onOpenPlate: (String) -> Unit,
     onGoToPhotos: () -> Unit,
+    onRegenerate: (String, Difficulty) -> Unit,
+    onRestore: (String) -> Unit,
 ) {
     if (packs.isEmpty()) {
         EmptyState(
@@ -340,7 +346,16 @@ private fun LandscapesTab(
                 PlateCard(
                     item = item,
                     plateRepository = plateRepository,
+                    defaultDifficulty = defaultDifficulty,
                     onClick = { onOpenPlate(item.summary.id) },
+                    onRegenerate = item.summary.sourceAsset?.let { _ ->
+                        { difficulty -> onRegenerate(item.summary.id, difficulty) }
+                    },
+                    onRestore = if (item.summary.difficulty != null) {
+                        { onRestore(item.summary.id) }
+                    } else {
+                        null
+                    },
                 )
             }
         }
@@ -460,9 +475,11 @@ private fun PlateCard(
     onClick: () -> Unit,
     onDelete: (() -> Unit)? = null,
     onRegenerate: ((Difficulty) -> Unit)? = null,
+    onRestore: (() -> Unit)? = null,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var confirmRestore by remember { mutableStateOf(false) }
     var showDifficultyDialog by remember { mutableStateOf(false) }
     var chosenDifficulty by remember(item.summary.id) {
         mutableStateOf(item.summary.difficulty ?: defaultDifficulty)
@@ -501,7 +518,7 @@ private fun PlateCard(
                 }
             }
 
-            if (onDelete != null) {
+            if (onDelete != null || onRegenerate != null || onRestore != null) {
                 Box(modifier = Modifier.align(Alignment.TopStart)) {
                     Surface(
                         shape = CircleShape,
@@ -530,14 +547,25 @@ private fun PlateCard(
                                 },
                             )
                         }
-                        DropdownMenuItem(
-                            text = { Text("Verwijderen") },
-                            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
-                            onClick = {
-                                menuOpen = false
-                                confirmDelete = true
-                            },
-                        )
+                        if (onRestore != null) {
+                            DropdownMenuItem(
+                                text = { Text("Herstel origineel") },
+                                onClick = {
+                                    menuOpen = false
+                                    confirmRestore = true
+                                },
+                            )
+                        }
+                        if (onDelete != null) {
+                            DropdownMenuItem(
+                                text = { Text("Verwijderen") },
+                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                                onClick = {
+                                    menuOpen = false
+                                    confirmDelete = true
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -583,6 +611,30 @@ private fun PlateCard(
         )
     }
 
+    if (confirmRestore) {
+        AlertDialog(
+            onDismissRequest = { confirmRestore = false },
+            title = { Text("Origineel herstellen?") },
+            text = {
+                Text(
+                    "De aangepaste moeilijkheid wordt verwijderd en je voortgang " +
+                        "op deze plaat wordt gewist.",
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmRestore = false
+                        onRestore?.invoke()
+                    },
+                ) { Text("Herstellen") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRestore = false }) { Text("Annuleren") }
+            },
+        )
+    }
+
     if (showDifficultyDialog && onRegenerate != null) {
         AlertDialog(
             onDismissRequest = { showDifficultyDialog = false },
@@ -594,8 +646,13 @@ private fun PlateCard(
                         .verticalScroll(rememberScrollState()),
                 ) {
                     Text(
-                        text = "De foto wordt opnieuw gemaakt met de gekozen " +
-                            "moeilijkheid. Je voortgang van deze foto wordt gewist.",
+                        text = "De plaat wordt opnieuw gemaakt met de gekozen " +
+                            "moeilijkheid. Je voortgang van deze plaat wordt gewist." +
+                            if (onRestore != null) {
+                                " Het origineel blijft beschikbaar via \"Herstel origineel\"."
+                            } else {
+                                ""
+                            },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

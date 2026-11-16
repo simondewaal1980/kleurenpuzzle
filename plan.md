@@ -40,7 +40,7 @@ Voor **eigen foto's** kiest de gebruiker een moeilijkheidsgraad uit vijf niveaus
 | Moeilijk | 17 | 450–800 | 0,03% |
 | Zeer moeilijk | 20 | 600–800 | 0,02% |
 
-De instellingen kiezen de standaard voor nieuwe foto's; op het fotoscherm kan de gebruiker per foto afwijken. Bestaande eigen foto's kunnen via het kaartmenu opnieuw worden gemaakt met een ander niveau; daarvoor bewaart de app de bronfoto lokaal. De niveaus staan in `pipeline/…/Difficulty.kt` en vertalen zich naar `ConvertOptions`, zodat app en generator dezelfde code blijven gebruiken.
+De instellingen kiezen de standaard voor nieuwe foto's; op het fotoscherm kan de gebruiker per foto afwijken. Bestaande eigen foto's én de meegeleverde landschappen kunnen via het kaartmenu opnieuw worden gemaakt met een ander niveau. Voor eigen foto's bewaart de app de bronfoto lokaal; voor landschappen worden compacte bronfoto's in de assets meegeleverd. Een aangepast landschap staat lokaal en kan met "Herstel origineel" terug. De niveaus staan in `pipeline/…/Difficulty.kt` en vertalen zich naar `ConvertOptions`, zodat app en generator dezelfde code blijven gebruiken.
 
 ### 3.2 Bestandsformaat per kleurplaat
 Compact binair formaat (of protobuf), per plaat ~200–500 KB:
@@ -83,7 +83,7 @@ tools/
 ```
 
 **Schermen:**
-1. **Home / Bibliotheek**: tabs — *Landschappen* (gebundelde packs per regio, bijv. "Alpen", "Middellandse Zee", "Noord-Europa"), *Verder gaan* (WIP's), *Mijn foto's*. Kaartweergave met thumbnail, voortgangspercentage. Eigen foto's hebben een kaartmenu om de moeilijkheid opnieuw in te stellen of de foto te verwijderen.
+1. **Home / Bibliotheek**: tabs — *Landschappen* (gebundelde packs per regio, bijv. "Alpen", "Middellandse Zee", "Noord-Europa"), *Verder gaan* (WIP's), *Mijn foto's*. Kaartweergave met thumbnail, voortgangspercentage. Zowel eigen foto's als landschappen hebben een kaartmenu om de moeilijkheid opnieuw in te stellen; eigen foto's kunnen daar ook worden verwijderd en landschappen kunnen terug naar het origineel.
 2. **Kleurbord** (hart van de app):
    - Pinch-zoom & pan (matrix-transformatie; bij diepe zoom tiled渲染 van de bitmap-laag).
    - Onderin: paletbalk met kleur + nummer; geselecteerde kleur accentueert bijbehorende regio's subtiel (optionele "hint"-modus).
@@ -112,6 +112,7 @@ tools/
 - Start met **12–15 platen** in 3 packs: bijv. *Alpen & Meren*, *Mediterraan* (Cinque Terre, Provence-lavendel, Griekse eilanden), *Noord & West* (Noorse fjorden, Schotse hooglanden, Ierse kliffen, Toscane).
 - Bronnen: eigen foto's, of stock met duidelijke licentie (Unsplash/Pexels-licentie controleren), of aangekochte foto's. Geen AI-gegenereerde beelden tenzij bewust gekozen.
 - Elke plaat: origineel fotomateriaal ≥ 3000 px, goede vlakverdeling (lucht/water/bergen als rustige grote vlakken + middengebied met detail) — past bij de ontspannings-doelstelling.
+- Van elke plaat gaat een compacte bronfoto (max. 1200 px) mee in de assets, zodat de gebruiker de moeilijkheid op het toestel opnieuw kan instellen.
 - Extra packs later via downloadbaar content (bijv. remote pack-manifest + download), zodat de APK klein blijft (doel: < 40 MB met startcontent).
 
 ## 8. Mijlpalen

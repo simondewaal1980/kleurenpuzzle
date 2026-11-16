@@ -89,6 +89,7 @@ class SettingsViewModel(
             transient.update { it.copy(busy = true) }
             progressRepository.clearAll()
             plateRepository.clearUserPlates()
+            plateRepository.clearLandscapeVariants()
             transient.value = Transient(message = "Alle gegevens zijn gewist.")
         }
     }

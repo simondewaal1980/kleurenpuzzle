@@ -17,7 +17,8 @@
                     "paletteSize": 20,
                     "credit": "Taubenflieger68 / Wikimedia Commons",
                     "license": "CC0",
-                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lautersee_2026.jpg"
+                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lautersee_2026.jpg",
+                    "source": "sources/alpen-lautersee.jpg"
                 },
                 {
                     "id": "alpen-dolomieten",
@@ -29,7 +30,8 @@
                     "paletteSize": 13,
                     "credit": "Tomzawa / Wikimedia Commons",
                     "license": "CC0",
-                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Croda_dei_Toni_2024.07_1.jpg"
+                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Croda_dei_Toni_2024.07_1.jpg",
+                    "source": "sources/alpen-dolomieten.jpg"
                 },
                 {
                     "id": "alpen-wolken",
@@ -41,7 +43,8 @@
                     "paletteSize": 16,
                     "credit": "Pixel.la / Wikimedia Commons",
                     "license": "CC0",
-                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Landscape-mountains-nature-clouds_(24326664915).jpg"
+                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Landscape-mountains-nature-clouds_(24326664915).jpg",
+                    "source": "sources/alpen-wolken.jpg"
                 }
             ]
         },
@@ -60,7 +63,8 @@
                     "paletteSize": 16,
                     "credit": "Raul Taciu / Unsplash via Wikimedia Commons",
                     "license": "CC0",
-                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Parco_Nazionale_delle_Cinque_Terre,_Riomaggiore,_Italy_(Unsplash).jpg"
+                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Parco_Nazionale_delle_Cinque_Terre,_Riomaggiore,_Italy_(Unsplash).jpg",
+                    "source": "sources/med-cinque-terre.jpg"
                 },
                 {
                     "id": "med-santorini",
@@ -72,7 +76,8 @@
                     "paletteSize": 15,
                     "credit": "MonAmi / Wikimedia Commons",
                     "license": "CC0",
-                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ia_Santorini_2011.JPG"
+                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ia_Santorini_2011.JPG",
+                    "source": "sources/med-santorini.jpg"
                 },
                 {
                     "id": "med-lavendel",
@@ -84,7 +89,8 @@
                     "paletteSize": 15,
                     "credit": "Patrick Van Stee / Unsplash via Wikimedia Commons",
                     "license": "CC0",
-                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lavender-meadow_(Unsplash).jpg"
+                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lavender-meadow_(Unsplash).jpg",
+                    "source": "sources/med-lavendel.jpg"
                 },
                 {
                     "id": "med-toscane",
@@ -96,7 +102,8 @@
                     "paletteSize": 16,
                     "credit": "Bischoff49 / Wikimedia Commons",
                     "license": "CC0",
-                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Montepulciano_Toscana_Italy_City_Landscape.jpg"
+                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Montepulciano_Toscana_Italy_City_Landscape.jpg",
+                    "source": "sources/med-toscane.jpg"
                 }
             ]
         },
@@ -115,7 +122,8 @@
                     "paletteSize": 16,
                     "credit": "Danny Froese / Unsplash via Wikimedia Commons",
                     "license": "CC0",
-                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Road_along_the_fjord_(Unsplash).jpg"
+                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Road_along_the_fjord_(Unsplash).jpg",
+                    "source": "sources/noord-fjord.jpg"
                 },
                 {
                     "id": "noord-moher",
@@ -127,7 +135,8 @@
                     "paletteSize": 14,
                     "credit": "Malte Baumann / Unsplash via Wikimedia Commons",
                     "license": "CC0",
-                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cliffs_of_Moher_-_Unsplash.jpeg"
+                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cliffs_of_Moher_-_Unsplash.jpeg",
+                    "source": "sources/noord-moher.jpg"
                 },
                 {
                     "id": "noord-schotland",
@@ -139,7 +148,8 @@
                     "paletteSize": 14,
                     "credit": "Vacaped3 / Wikimedia Commons",
                     "license": "CC0",
-                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Scenic_View_of_Scottish_Highlands_and_Loch.jpg"
+                    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Scenic_View_of_Scottish_Highlands_and_Loch.jpg",
+                    "source": "sources/noord-schotland.jpg"
                 }
             ]
         }

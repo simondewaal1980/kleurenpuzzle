@@ -23,8 +23,14 @@ class AppContainer(context: Context) {
     val settingsRepository = SettingsRepository(appContext)
     val progressRepository = ProgressRepository(appContext)
     val userPlateStore = UserPlateStore(appContext)
-    val plateRepository = PlateRepository(appContext, userPlateStore)
-    val userPlateGenerator = UserPlateGenerator(userPlateStore, plateRepository)
+    val landscapeVariantStore = LandscapeVariantStore(appContext)
+    val plateRepository = PlateRepository(appContext, userPlateStore, landscapeVariantStore)
+    val plateGenerator = PlateGenerator(
+        context = appContext,
+        userPlateStore = userPlateStore,
+        landscapeVariantStore = landscapeVariantStore,
+        plateRepository = plateRepository,
+    )
 
     init {
         applicationScope.launch {

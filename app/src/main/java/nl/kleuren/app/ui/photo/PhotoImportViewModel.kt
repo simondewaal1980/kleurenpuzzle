@@ -19,8 +19,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nl.kleuren.app.data.AppContainer
+import nl.kleuren.app.data.PlateGenerator
 import nl.kleuren.app.data.SettingsRepository
-import nl.kleuren.app.data.UserPlateGenerator
 import nl.kleuren.app.ui.components.stageLabel
 import nl.kleuren.pipeline.ConversionCancelledException
 import nl.kleuren.pipeline.Difficulty
@@ -56,7 +56,7 @@ data class PhotoImportUiState(
  */
 class PhotoImportViewModel(
     private val context: Context,
-    private val userPlateGenerator: UserPlateGenerator,
+    private val plateGenerator: PlateGenerator,
     settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
@@ -138,7 +138,7 @@ class PhotoImportViewModel(
             }
 
             try {
-                val entry = userPlateGenerator.create(
+                val entry = plateGenerator.create(
                     bitmap = bitmap,
                     title = current.title,
                     difficulty = current.difficulty,
@@ -242,7 +242,7 @@ class PhotoImportViewModel(
             initializer {
                 PhotoImportViewModel(
                     context = container.appContext,
-                    userPlateGenerator = container.userPlateGenerator,
+                    plateGenerator = container.plateGenerator,
                     settingsRepository = container.settingsRepository,
                 )
             }

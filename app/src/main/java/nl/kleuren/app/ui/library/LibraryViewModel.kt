@@ -12,12 +12,13 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import nl.kleuren.app.data.AppContainer
+import nl.kleuren.app.data.PlateGenerator
 import nl.kleuren.app.data.PlateRepository
 import nl.kleuren.app.data.PlateSummary
 import nl.kleuren.app.data.ProgressRepository
-import nl.kleuren.app.data.UserPlateGenerator
 import nl.kleuren.app.data.UserPlateStore
 import nl.kleuren.app.ui.components.stageLabel
+import nl.kleuren.pipeline.ConversionProgress
 import nl.kleuren.pipeline.Difficulty
 
 /** De drie tabbladen van de bibliotheek. */
@@ -74,7 +75,7 @@ class LibraryViewModel(
     private val plateRepository: PlateRepository,
     private val progressRepository: ProgressRepository,
     private val userPlateStore: UserPlateStore,
-    private val userPlateGenerator: UserPlateGenerator,
+    private val plateGenerator: PlateGenerator,
 ) : ViewModel() {
 
     /** Status van "opnieuw maken"; leeg als er niets gebeurt. */
@@ -158,16 +159,17 @@ class LibraryViewModel(
     }
 
     /**
-     * Maakt een bestaande eigen foto opnieuw met de gekozen moeilijkheid.
-     * Daarna wordt de oude voortgang gewist, want de regio-ids zijn veranderd.
+     * Maakt een bestaande eigen foto of een meegeleverd landschap opnieuw met
+     * de gekozen moeilijkheid. Daarna wordt de oude voortgang gewist, want de
+     * regio-ids zijn veranderd.
      */
-    fun regenerateUserPlate(plateId: String, difficulty: Difficulty) {
+    fun regeneratePlate(plateId: String, difficulty: Difficulty) {
         if (regeneration.value.plateId != null) return
         viewModelScope.launch {
-            val entry = userPlateStore.entries().firstOrNull { it.id == plateId }
-            if (entry == null) {
+            val summary = plateRepository.findSummary(plateId)
+            if (summary == null) {
                 regeneration.value = RegenerationState(
-                    message = "Deze foto is niet meer gevonden.",
+                    message = "Deze plaat is niet meer gevonden.",
                 )
                 return@launch
             }
@@ -176,23 +178,60 @@ class LibraryViewModel(
                 plateId = plateId,
                 stage = "Voorbereiden…",
             )
+            val onProgress: (ConversionProgress) -> Boolean = { progress ->
+                regeneration.update {
+                    it.copy(
+                        progress = progress.fraction,
+                        stage = progress.stage.stageLabel(),
+                    )
+                }
+                true
+            }
+
             try {
-                userPlateGenerator.regenerate(entry, difficulty) { progress ->
-                    regeneration.update {
-                        it.copy(
-                            progress = progress.fraction,
-                            stage = progress.stage.stageLabel(),
-                        )
-                    }
-                    true
+                if (summary.isUserPlate) {
+                    val entry = userPlateStore.entries().firstOrNull { it.id == plateId }
+                        ?: error("Deze foto is niet meer gevonden.")
+                    plateGenerator.regenerate(entry, difficulty, onProgress)
+                } else {
+                    plateGenerator.regenerateLandscape(summary, difficulty, onProgress)
                 }
                 progressRepository.delete(plateId)
                 regeneration.value = RegenerationState(
-                    message = "De foto is opnieuw gemaakt met ${difficulty.label.lowercase()}.",
+                    message = "${summary.title} is opnieuw gemaakt met " +
+                        "${difficulty.label.lowercase()}.",
                 )
             } catch (e: Exception) {
                 regeneration.value = RegenerationState(
                     message = "Opnieuw maken is niet gelukt: ${e.message}",
+                )
+            }
+        }
+    }
+
+    /** Zet een meegeleverd landschap terug naar de originele moeilijkheid. */
+    fun restoreLandscape(plateId: String) {
+        if (regeneration.value.plateId != null) return
+        viewModelScope.launch {
+            val summary = plateRepository.findSummary(plateId)
+            if (summary == null || summary.isUserPlate || summary.difficulty == null) {
+                return@launch
+            }
+
+            regeneration.value = RegenerationState(
+                plateId = plateId,
+                progress = 1f,
+                stage = "Origineel herstellen…",
+            )
+            try {
+                plateGenerator.restoreLandscape(plateId)
+                progressRepository.delete(plateId)
+                regeneration.value = RegenerationState(
+                    message = "${summary.title} staat weer op de originele moeilijkheid.",
+                )
+            } catch (e: Exception) {
+                regeneration.value = RegenerationState(
+                    message = "Herstellen is niet gelukt: ${e.message}",
                 )
             }
         }
@@ -211,7 +250,7 @@ class LibraryViewModel(
                     plateRepository = container.plateRepository,
                     progressRepository = container.progressRepository,
                     userPlateStore = container.userPlateStore,
-                    userPlateGenerator = container.userPlateGenerator,
+                    plateGenerator = container.plateGenerator,
                 )
             }
         }
