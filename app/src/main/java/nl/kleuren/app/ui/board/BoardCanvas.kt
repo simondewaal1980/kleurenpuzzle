@@ -9,7 +9,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -118,9 +118,11 @@ fun BoardCanvas(
         )
     }
 
-    // Zorg dat de bitmaplaag de bestaande voortgang toont. Dit gebeurt na de
-    // eerste compositie; daarna bij elke vulactie.
-    LaunchedEffect(renderer, filled) {
+    // Werk de vullaag bij vóór het tekenen. Een LaunchedEffect zou pas na de
+    // frame van de tik draaien; dan blijft de kleur zichtbaar achter op de
+    // volgende hertekening. SideEffect draait tijdens het toepassen van de
+    // compositie, dus de bitmap is klaar voordat het canvas hem tekent.
+    SideEffect {
         renderer.setFilled(filled)
     }
 
