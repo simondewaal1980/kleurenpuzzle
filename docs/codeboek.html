@@ -2897,6 +2897,43 @@ temp.writeBytes(encode(plate))
         renderer kiest daarom zelf de slimste route.
       </p>
 
+      <h4>De vullaag is klaar vóór het tekenen</h4>
+      <p>
+        De renderer tekent de vullaag in een bitmap. Het canvas toont die
+        bitmap daarna in zijn tekenfase. De volgorde is dus belangrijk: de
+        bitmap moet bijgewerkt zijn <em>voordat</em> het canvas hem tekent.
+      </p>
+      <p>
+        In de eerste versie stond die update in een
+        <code>LaunchedEffect</code>. Zo'n effect start pas nadat Compose de
+        compositie heeft toegepast. Daardoor kon het canvas nog de oude
+        bitmap tekenen: het nummer verdween wel, maar de kleur kwam pas bij
+        een volgende hertekening. Dat voelde als een pauze tussen de tik en
+        het inkleuren.
+      </p>
+      <p>
+        De oplossing is een <code>SideEffect</code>. Die draait tijdens het
+        toepassen van de compositie, dus vóór de tekenfase van dezelfde frame.
+        Op het moment dat het canvas de vullaag toont, is de bitmap
+        gegarandeerd actueel.
+      </p>
+      <div class="codeblock">
+        <div class="codeblock-bar"><span class="file">ui/board/BoardCanvas.kt</span><button class="copy-btn" type="button">Kopieer</button></div>
+        <pre><code><span class="comment">// De bitmap moet klaar zijn vóór het canvas hem tekent.</span>
+<span class="kw">SideEffect</span> {
+    renderer.setFilled(filled)
+}</code></pre>
+      </div>
+      <div class="callout tip">
+        <span class="label">Vuistregel</span>
+        <p>
+          Moet een object buiten Compose in dezelfde frame zichtbaar zijn?
+          Gebruik dan <code>SideEffect</code>. Een
+          <code>LaunchedEffect</code> is bedoeld voor werk dat mag wachten,
+          zoals gegevens laden of een animatie starten.
+        </p>
+      </div>
+
       <h3>Nummers die vanzelf rustig worden</h3>
       <p>
         Als je ver uitzoomt, zijn kleine vlakken niet leesbaar. Het bord tekent
